@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赫系洗发水/发膜达人筛选工具</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --card-bg: #fff;
+  --border: #e5e7eb;
+  --text: #1f2937;
+  --text2: #6b7280;
+  --primary: #6366f1;
+  --primary-bg: #eef2ff;
+  --green: #10b981;
+  --green-bg: #ecfdf5;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --yellow: #f59e0b;
+  --yellow-bg: #fffbeb;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --orange: #f97316;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
+.header { background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; padding:24px 32px; }
+.header h1 { font-size:22px; margin-bottom:4px; }
+.header p { font-size:13px; opacity:.85; }
+.container { max-width:100%; margin:0 auto; padding:16px 24px; }
+.rules-bar { background:var(--card-bg); border-radius:10px; padding:16px 20px; margin-bottom:16px; border:1px solid var(--border); display:flex; gap:24px; flex-wrap:wrap; }
+.rule-card { flex:1; min-width:280px; padding:12px 16px; border-radius:8px; background:#fafbfc; border:1px solid var(--border); }
+.rule-card h3 { font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.rule-card .badge { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600; }
+.badge-shampoo { background:var(--primary-bg); color:var(--primary); }
+.badge-hairmask { background:var(--green-bg); color:#059669; }
+.rule-card ul { list-style:none; font-size:12px; color:var(--text2); }
+.rule-card li { padding:2px 0; }
+.rule-card li::before { content:"✓ "; color:var(--green); font-weight:bold; }
+.rule-card li.optional::before { content:"○ "; color:var(--yellow); }
+.toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; padding:12px 16px; background:var(--card-bg); border-radius:10px; border:1px solid var(--border); }
+.toolbar label { font-size:13px; color:var(--text2); margin-right:4px; }
+.toolbar select, .toolbar input { padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff; }
+.toolbar input[type=text] { flex:1; min-width:180px; max-width:320px; }
+.btn { padding:7px 16px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:500; transition:all .15s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:#4f46e5; }
+.btn-outline { background:#fff; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { background:#f9fafb; }
+.btn-danger { background:var(--red); color:#fff; }
+.btn-sm { padding:4px 10px; font-size:12px; }
+span.tag { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:500; white-space:nowrap; }
+.tag-pass { background:var(--green-bg); color:#059669; }
+.tag-fail { background:var(--red-bg); color:#dc2626; }
+.tag-pending { background:var(--yellow-bg); color:#d97706; }
+.tag-pure { background:var(--primary-bg); color:var(--primary); }
+.tag-shop { background:#f3f4f6; color:#9ca3af; }
+.table-wrap { background:var(--card-bg); border-radius:10px; border:1px solid var(--border); overflow:auto; max-height:70vh; }
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:1400px; }
+thead { position:sticky; top:0; z-index:2; }
+thead th { background:#f9fafb; padding:10px 10px; text-align:left; font-weight:600; font-size:12px; color:var(--text2); border-bottom:2px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none; }
+thead th:hover { color:var(--primary); }
+thead th.sorted { color:var(--primary); }
+tbody td { padding:8px 10px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+tbody tr:hover { background:#f8faff; }
+tbody tr.selected { background:var(--primary-bg); }
+.editable { padding:4px 6px; border:1px dashed transparent; border-radius:4px; cursor:pointer; min-width:60px; transition:all .15s; }
+.editable:hover { border-color:var(--primary); background:#fff; }
+.editable:focus { outline:none; border-color:var(--primary); border-style:solid; background:#fff; }
+.empty { text-align:center; padding:40px; color:var(--text2); }
+.status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+.status-pass { background:var(--green); }
+.status-fail { background:var(--red); }
+.status-pending { background:var(--yellow); }
+.pagination-info { font-size:12px; color:var(--text2); }
+.copy-btn { cursor:pointer; color:var(--primary); font-size:12px; margin-left:4px; }
+.copy-btn:hover { text-decoration:underline; }
+.select-all { margin-right:8px; cursor:pointer; }
+.footer { text-align:center; padding:20px; font-size:12px; color:var(--text2); }
+input[type=checkbox] { accent-color:var(--primary); }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🧴 赫系洗发水 / 发膜达人筛选工具</h1>
+  <p>蝉妈妈日用百货 · 女粉≥60% · 近30天带货10-100w · 有联系方式 · 视频达人 | 数据采集：2026-08-08</p>
+</div>
+
+<div class="container">
+  <!-- 规则说明 -->
+  <div class="rules-bar" id="rulesBar">
+    <div class="rule-card" id="shampooRule">
+      <h3>🫧 洗发水达人 <span class="badge badge-shampoo">硬性条件</span></h3>
+      <ul>
+        <li>受众画像：女粉占比 ≥ 60%</li>
+        <li>带货品类：洗护日用品 → 美妆 → 其他</li>
+        <li>近30天母婴/美妆/个护家清有一条爆款（单条成交 &gt; 1w）</li>
+      </ul>
+    </div>
+    <div class="rule-card" id="hairmaskRule">
+      <h3>💆 发膜达人 <span class="badge badge-hairmask">筛选要求</span></h3>
+      <ul>
+        <li>性别：女博主为主</li>
+        <li>带货品类：洗护日用品 → 美妆 → 其他</li>
+        <li>近30天带货数据 ≥ 10w</li>
+        <li>至少一条近30天成交 1w+ 的带货视频</li>
+        <li class="optional">纯佣可放宽数据要求（需人工复核）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <label>品类筛选</label>
+    <select id="filterCategory" onchange="applyFilters()">
+      <option value="all">全部</option>
+      <option value="wash">洗护日用品</option>
+      <option value="beauty">美妆护肤</option>
+      <option value="other">其他</option>
+      <option value="empty">未分类</option>
+    </select>
+    <label>判定结果</label>
+    <select id="filterResult" onchange="applyFilters()">
+      <option value="all">全部</option>
+      <option value="shampoo-pass">洗发水通过</option>
+      <option value="hairmask-pass">发膜通过</option>
+      <option value="both-pass">双通过</option>
+      <option value="pending">待补充数据</option>
+      <option value="shop">店铺号</option>
+    </select>
+    <label>纯佣</label>
+    <select id="filterPure" onchange="applyFilters()">
+      <option value="all">全部</option>
+      <option value="yes">是</option>
+      <option value="no">否</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="搜索达人名称/抖音号..." oninput="applyFilters()">
+    <button class="btn btn-outline" onclick="resetFilters()">清除筛选</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 导出CSV</button>
+    <button class="btn btn-outline btn-sm" onclick="importJSON()">📤 导入数据</button>
+    <select id="batchSetCategory" style="margin-left:auto;" onchange="batchSet(this.value)">
+      <option value="">批量设置品类...</option>
+      <option value="wash">设为洗护日用品</option>
+      <option value="beauty">设为美妆护肤</option>
+      <option value="other">设为其他</option>
+      <option value="shop">标记为店铺号</option>
+    </select>
+    <span class="pagination-info" id="countInfo"></span>
+  </div>
+
+  <!-- 数据表格 -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30px"><input type="checkbox" class="select-all" onclick="toggleSelectAll(this)" title="全选"></th>
+          <th style="width:36px">#</th>
+          <th style="min-width:140px">达人名称</th>
+          <th style="width:110px">抖音号</th>
+          <th style="width:80px">粉丝数</th>
+          <th style="width:100px">视频销售额</th>
+          <th style="width:100px">视频均销</th>
+          <th style="width:70px">IPM</th>
+          <th style="width:100px">带货品类</th>
+          <th style="width:110px">单条最高成交</th>
+          <th style="width:80px">女粉占比</th>
+          <th style="width:90px">洗发水</th>
+          <th style="width:90px">发膜</th>
+          <th style="width:60px">纯佣</th>
+          <th style="width:110px">人群标签</th>
+          <th style="width:70px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="footer">赫系达人筛选工具 · 蝉妈妈数据为估算值仅供参考 · 最终以平台实际数据为准</div>
+</div>
+
+<!-- 隐藏的文件导入input -->
+<input type="file" id="fileInput" accept=".json,.csv" style="display:none" onchange="handleFileImport(event)">
+
+<script>
+// ===================== 判定逻辑 =====================
+
+function parseSales(range) {
+  // 解析 "50w~100w" 或 "5000~1w" 等格式，返回中值（元）
+  if (!range) return 0;
+  const cleaned = range.replace(/,/g, '').replace(/占全品类.*$/, '').trim();
+  const m = cleaned.match(/([\d.]+)w?\s*[~～\-]\s*([\d.]+)w?/);
+  if (m) {
+    let lo = parseFloat(m[1]), hi = parseFloat(m[2]);
+    if (/w/.test(cleaned)) { lo *= 10000; hi *= 10000; }
+    return (lo + hi) / 2;
+  }
+  // 单个数字
+  const single = parseFloat(cleaned.replace(/w/g, '').replace(/,/g, ''));
+  if (isNaN(single)) return 0;
+  return /w/.test(cleaned) ? single * 10000 : single;
+}
+
+function parseSalesMin(range) {
+  // 解析区间的最小值
+  if (!range) return 0;
+  const cleaned = range.replace(/,/g, '').replace(/占全品类.*$/, '').trim();
+  const m = cleaned.match(/([\d.]+)w?\s*[~～\-]/);
+  if (m) {
+    let v = parseFloat(m[1]);
+    return /w/.test(cleaned) ? v * 10000 : v;
+  }
+  return parseSales(range) * 0.7; // 没有区间就用中值*0.7估算
+}
+
+function checkShampooRule(d) {
+  // 洗发水硬性条件判定
+  const reasons = [];
+  let pass = true;
+
+  // 1. 女粉占比 ≥ 60%（蝉妈妈筛选已过滤，默认满足）
+  // 但如果用户手动填了 < 60%，则标记不通过
+  if (d.femaleRatio !== undefined && d.femaleRatio !== null && d.femaleRatio !== '') {
+    const r = parseFloat(String(d.femaleRatio).replace('%', ''));
+    if (!isNaN(r) && r < 60) { pass = false; reasons.push('女粉不足60%'); }
+  }
+
+  // 2. 带货品类优先级
+  if (d.category === 'shop') { pass = false; reasons.push('店铺号'); }
+  else if (d.category === 'other') { reasons.push('品类为其他(优先级低)'); }
+  // wash/beauty 通过
+
+  // 3. 关键：单条成交 > 1w 的爆款视频（母婴/美妆/个护家清）
+  // 如果 videoAvgSales ≥ 1w 且 category 为 wash/beauty，可初步判断
+  const avgSales = parseSales(d.videoAvgSales);
+  const topVideo = parseSales(d.topVideoSales);
+
+  if (topVideo >= 10000) {
+    // 明确有单条 > 1w
+  } else if (avgSales >= 10000 && !d.topVideoSales) {
+    reasons.push('均销≥1w(待确认单条)');
+  } else if (d.topVideoSales && topVideo < 10000) {
+    pass = false;
+    reasons.push('无单条1w+爆款视频');
+  } else if (!d.topVideoSales && avgSales < 10000) {
+    reasons.push('待确认爆款视频');
+  }
+
+  return { pass, reasons };
+}
+
+function checkHairmaskRule(d) {
+  const reasons = [];
+  let pass = true;
+
+  // 1. 女博主（蝉妈妈筛选已过滤女粉≥60%）
+  if (d.category === 'shop') { pass = false; reasons.push('店铺号'); }
+
+  // 2. 近30天带货 ≥ 10w（蝉妈妈筛选10-100w，基本满足）
+  const salesMin = parseSalesMin(d.videoSales);
+  if (salesMin < 100000 && d.videoSales.indexOf('25w') === -1 && d.videoSales.indexOf('50w') === -1 && d.videoSales.indexOf('10w') === -1) {
+    pass = false; reasons.push('近30天带货不足10w');
+  }
+
+  // 3. 至少一条近30天成交 1w+ 带货视频
+  const avgSales = parseSales(d.videoAvgSales);
+  const topVideo = parseSales(d.topVideoSales);
+
+  if (d.isPure && d.pureRelax) {
+    // 纯佣放宽
+    if (topVideo >= 5000 || (!d.topVideoSales && avgSales >= 5000)) {
+      reasons.push('纯佣放宽');
+    } else if (!d.topVideoSales && avgSales < 5000) {
+      reasons.push('纯佣待确认爆款视频');
+    }
+  } else {
+    if (topVideo >= 10000) {
+      // OK
+    } else if (avgSales >= 10000 && !d.topVideoSales) {
+      reasons.push('均销≥1w(待确认单条)');
+    } else if (d.topVideoSales && topVideo < 10000) {
+      pass = false; reasons.push('无1w+带货视频');
+    } else if (!d.topVideoSales && avgSales < 10000) {
+      reasons.push('待确认带货视频');
+    }
+  }
+
+  // 4. 品类优先级
+  if (d.category === 'other') { reasons.push('品类为其他(优先级低)'); }
+
+  return { pass, reasons };
+}
+
+// ===================== 数据 =====================
+
+let darenData = [
+{"name":"环星科普局","douyinId":"24812012043","fans":"16.3w","videoCount":"14","likeMedian":"2,550","likeFanRatio":"11.69%","videoSales":"50w~100w","videoAvgSales":"50w~100w","ipm":"30.62"},
+{"name":"YOPENG砚知专卖店","douyinId":"42284094953","fans":"3.5w","videoCount":"16","likeMedian":"27","likeFanRatio":"0.21%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"1.04"},
+{"name":"沛恩假发系列","douyinId":"Hz6645","fans":"5,366","videoCount":"261","likeMedian":"1","likeFanRatio":"0.02%","videoSales":"50w~100w","videoAvgSales":"1w~2.5w","ipm":"1.91"},
+{"name":"智绘麻人（分享版）","douyinId":"79758815699","fans":"4.1w","videoCount":"84","likeMedian":"1","likeFanRatio":"0.01%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"0.98"},
+{"name":"香菜牛肉","douyinId":"117344039","fans":"1w","videoCount":"61","likeMedian":"8","likeFanRatio":"0.12%","videoSales":"50w~100w","videoAvgSales":"2500~5000","ipm":"2.34"},
+{"name":"榴莲饼","douyinId":"LlianBin326mua","fans":"25.9w","videoCount":"38","likeMedian":"7,054","likeFanRatio":"7.05%","videoSales":"50w~100w","videoAvgSales":"2.5w~5w","ipm":"64.15"},
+{"name":"superb超威居家日用旗舰店","douyinId":"CHEERWIN","fans":"8.7w","videoCount":"163","likeMedian":"2","likeFanRatio":"0.01%","videoSales":"50w~100w","videoAvgSales":"1000~2500","ipm":"1.76"},
+{"name":"是欣欣阿","douyinId":"36733190421","fans":"1.1w","videoCount":"107","likeMedian":"2","likeFanRatio":"0.04%","videoSales":"50w~100w","videoAvgSales":"2500~5000","ipm":"2.24"},
+{"name":"庸俗故事","douyinId":"YSGS12138","fans":"248.1w","videoCount":"19","likeMedian":"3","likeFanRatio":"0.25%","videoSales":"50w~100w","videoAvgSales":"1w~2.5w","ipm":"24.53"},
+{"name":"白薇","douyinId":"175490986","fans":"2.2w","videoCount":"151","likeMedian":"2","likeFanRatio":"0.13%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"8.98"},
+{"name":"维邦乐亳州精能百货专卖店","douyinId":"38250431508","fans":"3,161","videoCount":"58","likeMedian":"19","likeFanRatio":"1.83%","videoSales":"50w~100w","videoAvgSales":"1w~2.5w","ipm":"4.15"},
+{"name":"物鸣厨房日用旗舰店","douyinId":"pinmoo2017","fans":"12.3w","videoCount":"54","likeMedian":"3","likeFanRatio":"0.04%","videoSales":"50w~100w","videoAvgSales":"2500~5000","ipm":"1.87"},
+{"name":"雯雯子🍓","douyinId":"mm54017787","fans":"13.5w","videoCount":"95","likeMedian":"11","likeFanRatio":"0.03%","videoSales":"50w~100w","videoAvgSales":"2500~5000","ipm":"1.74"},
+{"name":"葛夕","douyinId":"msyyk888","fans":"95w","videoCount":"562","likeMedian":"2","likeFanRatio":"0%","videoSales":"50w~100w","videoAvgSales":"2500~5000","ipm":"7.99"},
+{"name":"凡言凡语","douyinId":"FanyanFanyu123","fans":"55.7w","videoCount":"9","likeMedian":"1w","likeFanRatio":"2.63%","videoSales":"50w~100w","videoAvgSales":"2.5w~5w","ipm":"12.01"},
+{"name":"陈陈cel.","douyinId":"42233315682","fans":"5.4w","videoCount":"171","likeMedian":"2","likeFanRatio":"0%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"3.48"},
+{"name":"李一菲爱生活","douyinId":"doumc01","fans":"8.3w","videoCount":"80","likeMedian":"10","likeFanRatio":"0.03%","videoSales":"50w~100w","videoAvgSales":"1000~2500","ipm":"3.26"},
+{"name":"麦麦麦麦麦麦麦子。","douyinId":"MZ0214mz","fans":"16.8w","videoCount":"96","likeMedian":"18","likeFanRatio":"0.11%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"5.8"},
+{"name":"闲人和她的嬢嬢（后妈）","douyinId":"xianren5189","fans":"137.8w","videoCount":"12","likeMedian":"8,797","likeFanRatio":"0.94%","videoSales":"50w~100w","videoAvgSales":"1w~2.5w","ipm":"8.13"},
+{"name":"莎拉啦🍟","douyinId":"58046982417","fans":"8,356","videoCount":"48","likeMedian":"17","likeFanRatio":"1.22%","videoSales":"50w~100w","videoAvgSales":"5000~1w","ipm":"6.93"},
+{"name":"徐鹿_假发专卖","douyinId":"55765486522","fans":"1.4w","videoCount":"297","likeMedian":"3","likeFanRatio":"0.07%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"5.98"},
+{"name":"妙妙","douyinId":"38519889419","fans":"153.9w","videoCount":"21","likeMedian":"184","likeFanRatio":"0.83%","videoSales":"25w~50w","videoAvgSales":"1w~2.5w","ipm":"15.52"},
+{"name":"卖女孩的小火柴👶","douyinId":"86437557406","fans":"3.1w","videoCount":"132","likeMedian":"6","likeFanRatio":"0.04%","videoSales":"25w~50w","videoAvgSales":"500~1000","ipm":"3.9"},
+{"name":"尹星耀-粉矿💗","douyinId":"60429497684","fans":"1.5w","videoCount":"78","likeMedian":"3","likeFanRatio":"0.05%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"3.31"},
+{"name":"黄小仙（Lucky）","douyinId":"jiali2019717","fans":"6.5w","videoCount":"181","likeMedian":"7","likeFanRatio":"0.08%","videoSales":"25w~50w","videoAvgSales":"500~1000","ipm":"4.39"},
+{"name":"探长科普","douyinId":"42486038192","fans":"11.6w","videoCount":"8","likeMedian":"223","likeFanRatio":"0.28%","videoSales":"25w~50w","videoAvgSales":"5w~10w","ipm":"35.33"},
+{"name":"暖饱饱","douyinId":"nuanbaobao121","fans":"41w","videoCount":"454","likeMedian":"9","likeFanRatio":"0%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"4.13"},
+{"name":"苏菲SOFY官方旗舰店直播间","douyinId":"Sofygirlon","fans":"90.3w","videoCount":"142","likeMedian":"2","likeFanRatio":"0%","videoSales":"25w~50w","videoAvgSales":"2500~5000","ipm":"0.47"},
+{"name":"怡恩贝官方旗舰店","douyinId":"Yienbei","fans":"41.9w","videoCount":"841","likeMedian":"1","likeFanRatio":"0%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"4.64"},
+{"name":"小乖的百宝箱","douyinId":"57812051186","fans":"1.2w","videoCount":"123","likeMedian":"5","likeFanRatio":"0.37%","videoSales":"25w~50w","videoAvgSales":"1w~2.5w","ipm":"10.09"},
+{"name":"乌龙龙","douyinId":"wulonglonggg","fans":"21.4w","videoCount":"49","likeMedian":"7","likeFanRatio":"0.01%","videoSales":"25w~50w","videoAvgSales":"1w~2.5w","ipm":"2.45"},
+{"name":"飞飞超会吃","douyinId":"81668181448","fans":"2.6w","videoCount":"107","likeMedian":"15","likeFanRatio":"0.68%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"6.48"},
+{"name":"天天开心心心","douyinId":"doumt01","fans":"1.3w","videoCount":"64","likeMedian":"6","likeFanRatio":"0.3%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"5.23"},
+{"name":"丁豆豆🧚‍♀️～粉矿💗","douyinId":"90409850873","fans":"9,305","videoCount":"57","likeMedian":"2","likeFanRatio":"0.05%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"5.22"},
+{"name":"金秀儿官方旗舰店","douyinId":"Jinxiuer2017","fans":"1.1w","videoCount":"180","likeMedian":"3","likeFanRatio":"0.14%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"5.63"},
+{"name":"晨业个人护理旗舰店","douyinId":"46928014319","fans":"3.7w","videoCount":"155","likeMedian":"3","likeFanRatio":"0.01%","videoSales":"25w~50w","videoAvgSales":"500~1000","ipm":"1.29"},
+{"name":"旭儿","douyinId":"xuer1995","fans":"243.1w","videoCount":"6","likeMedian":"1w","likeFanRatio":"3.09%","videoSales":"25w~50w","videoAvgSales":"25w~50w","ipm":"40.67"},
+{"name":"璁哥.","douyinId":"59803689496","fans":"9,588","videoCount":"45","likeMedian":"4","likeFanRatio":"1.72%","videoSales":"25w~50w","videoAvgSales":"2500~5000","ipm":"8.93"},
+{"name":"罐罐来啦","douyinId":"95929569653","fans":"9,791","videoCount":"45","likeMedian":"4","likeFanRatio":"0.11%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"3.16"},
+{"name":"萨福","douyinId":"SAPPHOfromlesbos","fans":"10.5w","videoCount":"155","likeMedian":"4","likeFanRatio":"0.04%","videoSales":"25w~50w","videoAvgSales":"2500~5000","ipm":"6.45"},
+{"name":"廖智","douyinId":"woshiliaozhi","fans":"487.4w","videoCount":"55","likeMedian":"12","likeFanRatio":"0%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"25.05"},
+{"name":"之几官方旗舰店","douyinId":"zoomjoy01","fans":"1.8w","videoCount":"34","likeMedian":"4","likeFanRatio":"0.03%","videoSales":"25w~50w","videoAvgSales":"2500~5000","ipm":"3.06"},
+{"name":"可爱鬼 ✨","douyinId":"keaigui6","fans":"194.5w","videoCount":"15","likeMedian":"1.4w","likeFanRatio":"0.95%","videoSales":"25w~50w","videoAvgSales":"25w~50w","ipm":"20.52"},
+{"name":"毛毛","douyinId":"maomao00516","fans":"127.6w","videoCount":"8","likeMedian":"1,554","likeFanRatio":"0.13%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"17.08"},
+{"name":"拾光科普馆","douyinId":"30651116737","fans":"10.9w","videoCount":"13","likeMedian":"843","likeFanRatio":"1.03%","videoSales":"25w~50w","videoAvgSales":"5w~10w","ipm":"4.43"},
+{"name":"Margaret Dabbs海外旗舰店","douyinId":"42262989674","fans":"3,598","videoCount":"62","likeMedian":"1","likeFanRatio":"0.28%","videoSales":"25w~50w","videoAvgSales":"2500~5000","ipm":"63.65"},
+{"name":"她的故事","douyinId":"1000672055","fans":"5,295","videoCount":"20","likeMedian":"25","likeFanRatio":"16.03%","videoSales":"25w~50w","videoAvgSales":"5w~10w","ipm":"5.12"},
+{"name":"豆鲨包","douyinId":"62224890070","fans":"1.3w","videoCount":"136","likeMedian":"22","likeFanRatio":"1.67%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"12.89"},
+{"name":"小镇姑娘派嫂","douyinId":"RF580580580","fans":"109.2w","videoCount":"14","likeMedian":"3,169","likeFanRatio":"0.33%","videoSales":"25w~50w","videoAvgSales":"1w~2.5w","ipm":"6.67"},
+{"name":"海昌个人护理旗舰店","douyinId":"2240197624","fans":"1.5w","videoCount":"30","likeMedian":"3","likeFanRatio":"0.03%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"1.78"}
+];
+
+// 补充第二页部分数据
+darenData = darenData.concat([
+{"name":"甘晓华","douyinId":"31230306335","fans":"5w","videoCount":"4","likeMedian":"363","likeFanRatio":"1.01%","videoSales":"25w~50w","videoAvgSales":"5w~10w","ipm":"1.78"},
+{"name":"刘公子吖","douyinId":"liu66696616","fans":"17.1w","videoCount":"130","likeMedian":"47","likeFanRatio":"0.11%","videoSales":"25w~50w","videoAvgSales":"5000~1w","ipm":"11.89"},
+{"name":"喵喵岛假发","douyinId":"MiaoMiaoDaojiafa","fans":"15w","videoCount":"266","likeMedian":"16","likeFanRatio":"0.03%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"23.38"},
+{"name":"常不火（视频分享号）","douyinId":"51962202910","fans":"6.9w","videoCount":"113","likeMedian":"73","likeFanRatio":"0.24%","videoSales":"25w~50w","videoAvgSales":"1000~2500","ipm":"4.78"},
+{"name":"芹芹啃啃","douyinId":"46941423737","fans":"71.5w","videoCount":"5","likeMedian":"3.3w","likeFanRatio":"4.61%","videoSales":"25w~50w","videoAvgSales":"1w~2.5w","ipm":"110.9"}
+]);
+
+// 初始化：给每条数据添加筛选专用字段
+darenData = darenData.map((d, i) => ({
+  ...d,
+  id: i + 1,
+  category: '',       // wash/beauty/other/shop - 手动设置
+  topVideoSales: '',  // 单条最高成交金额（手动录入）
+  femaleRatio: '',    // 女粉占比精确值（手动录入）
+  isPure: false,      // 纯佣
+  pureRelax: false,   // 纯佣放宽标记
+  audienceTag: '',    // 人群标签：精致妈妈/小镇青年/都市蓝领
+  note: '',           // 备注
+  selected: false
+}));
+
+// 自动识别店铺号（名称包含旗舰店/专卖店/直播间/假发等词 -> 大概率是店铺号而非达人）
+darenData.forEach(d => {
+  if (/旗舰店|专卖店|直播间$|旗舰店直播间/.test(d.name) && !/达人|分享|稿费/.test(d.name)) {
+    d.category = 'shop';
+  }
+});
+
+// ===================== 渲染 =====================
+
+let sortCol = null;
+let sortAsc = true;
+
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  let html = '';
+  
+  if (data.length === 0) {
+    html = '<tr><td colspan="16" class="empty">没有符合条件的数据</td></tr>';
+  }
+  
+  data.forEach((d, idx) => {
+    const shampoo = checkShampooRule(d);
+    const hairmask = checkHairmaskRule(d);
+    
+    const shampooStatus = d.category === 'shop' ? 'shop' : (shampoo.pass ? 'pass' : (shampoo.reasons.some(r => r.includes('待确认')) ? 'pending' : 'fail'));
+    const hairmaskStatus = d.category === 'shop' ? 'shop' : (hairmask.pass ? 'pass' : (hairmask.reasons.some(r => r.includes('待确认')) ? 'pending' : 'fail'));
+    
+    const shampooTag = shampooStatus === 'pass' ? '<span class="tag tag-pass">✅ 通过</span>' 
+      : shampooStatus === 'shop' ? '<span class="tag tag-shop">店铺号</span>'
+      : shampooStatus === 'pending' ? '<span class="tag tag-pending">⚠ 待确认</span>'
+      : '<span class="tag tag-fail">❌ 未通过</span>';
+    
+    const hairmaskTag = hairmaskStatus === 'pass' ? '<span class="tag tag-pass">✅ 通过</span>'
+      : hairmaskStatus === 'shop' ? '<span class="tag tag-shop">店铺号</span>'
+      : hairmaskStatus === 'pending' ? '<span class="tag tag-pending">⚠ 待确认</span>'
+      : '<span class="tag tag-fail">❌ 未通过</span>';
+    
+    const pureTag = d.isPure ? '<span class="tag tag-pure">纯佣</span>' : '';
+    
+    // 数据是50w~100w 已去除占全品类
+    const salesDisplay = d.videoSales;
+    const avgDisplay = d.videoAvgSales;
+    
+    let rowClass = '';
+    if (d.selected) rowClass = ' selected';
+    if (d.category === 'shop') rowClass += '';
+    
+    html += `<tr class="${rowClass}">
+      <td><input type="checkbox" ${d.selected ? 'checked' : ''} onchange="toggleSelect(${d.id})"></td>
+      <td>${d.id}</td>
+      <td><strong>${esc(d.name)}</strong>${d.note ? ' <span style="color:#8b5cf6;font-size:11px">📝</span>' : ''}</td>
+      <td><code>${esc(d.douyinId)}</code></td>
+      <td>${esc(d.fans)}</td>
+      <td>${esc(salesDisplay)}</td>
+      <td>${esc(avgDisplay)}</td>
+      <td>${d.ipm}</td>
+      <td contenteditable="true" class="editable" data-id="${d.id}" data-field="category" 
+          onblur="editField(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${catDisplay(d.category)}</td>
+      <td contenteditable="true" class="editable" data-id="${d.id}" data-field="topVideoSales" 
+          onblur="editField(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.topVideoSales}</td>
+      <td contenteditable="true" class="editable" data-id="${d.id}" data-field="femaleRatio" 
+          onblur="editField(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.femaleRatio}</td>
+      <td>${shampooTag}<br><span style="font-size:10px;color:#9ca3af">${shampoo.reasons.join('；')}</span></td>
+      <td>${hairmaskTag}<br><span style="font-size:10px;color:#9ca3af">${hairmask.reasons.join('；')}</span></td>
+      <td>${pureTag}<br><a href="javascript:togglePure(${d.id})" style="font-size:11px">${d.isPure ? '取消' : '设为纯佣'}</a></td>
+      <td contenteditable="true" class="editable" data-id="${d.id}" data-field="audienceTag" 
+          onblur="editField(event)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.audienceTag}</td>
+      <td>
+        <a href="https://www.chanmama.com/searchResult?keyword=${d.douyinId}&type=author" target="_blank" style="font-size:11px" title="蝉妈妈搜索">🔍</a>
+        &nbsp;<a href="javascript:resetRow(${d.id})" style="font-size:11px;color:#ef4444" title="重置">↺</a>
+      </td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+  document.getElementById('countInfo').textContent = `共 ${data.length} 条`;
+}
+
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function catDisplay(c) {
+  if (c === 'wash') return '洗护日用品';
+  if (c === 'beauty') return '美妆护肤';
+  if (c === 'other') return '其他';
+  if (c === 'shop') return '🏪 店铺号';
+  return '（点击填写）';
+}
+
+// ===================== 编辑 =====================
+
+function editField(e) {
+  const el = e.target;
+  const id = parseInt(el.dataset.id);
+  const field = el.dataset.field;
+  const value = el.innerText.trim();
+  
+  const d = darenData.find(item => item.id === id);
+  if (!d) return;
+  
+  if (field === 'category') {
+    const v = value.replace(/[🏪\s]/g, '');
+    if (/洗护/.test(v)) d.category = 'wash';
+    else if (/美妆/.test(v)) d.category = 'beauty';
+    else if (/店铺|旗舰/.test(v)) d.category = 'shop';
+    else if (/其他/.test(v)) d.category = 'other';
+    else if (v.length > 0) d.category = 'wash'; // 默认
+    else d.category = '';
+  } else if (field === 'topVideoSales') {
+    d.topVideoSales = value;
+  } else if (field === 'femaleRatio') {
+    d.femaleRatio = value;
+  } else if (field === 'audienceTag') {
+    d.audienceTag = value;
+  }
+  
+  // 重新渲染保持排序
+  applyFilters();
+}
+
+function togglePure(id) {
+  const d = darenData.find(item => item.id === id);
+  if (!d) return;
+  d.isPure = !d.isPure;
+  if (d.isPure) d.pureRelax = true;
+  else d.pureRelax = false;
+  applyFilters();
+}
+
+function toggleSelect(id) {
+  const d = darenData.find(item => item.id === id);
+  if (!d) return;
+  d.selected = !d.selected;
+  applyFilters();
+}
+
+function toggleSelectAll(cb) {
+  const currentData = getFilteredData();
+  currentData.forEach(d => { d.selected = cb.checked; });
+  applyFilters();
+}
+
+function resetRow(id) {
+  const d = darenData.find(item => item.id === id);
+  if (!d) return;
+  d.category = '';
+  d.topVideoSales = '';
+  d.femaleRatio = '';
+  d.isPure = false;
+  d.pureRelax = false;
+  d.audienceTag = '';
+  d.note = '';
+  applyFilters();
+}
+
+function batchSet(value) {
+  if (!value) return;
+  const selected = darenData.filter(d => d.selected);
+  if (selected.length === 0) {
+    // 没有选中任何行，操作当前过滤结果
+    const current = getFilteredData();
+    current.forEach(d => { d.category = value; });
+  } else {
+    selected.forEach(d => { d.category = value; });
+  }
+  document.getElementById('batchSetCategory').value = '';
+  applyFilters();
+}
+
+// ===================== 筛选 =====================
+
+function getFilteredData() {
+  const catFilter = document.getElementById('filterCategory').value;
+  const resFilter = document.getElementById('filterResult').value;
+  const pureFilter = document.getElementById('filterPure').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  
+  let data = [...darenData];
+  
+  // 排序
+  if (sortCol) {
+    data.sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (sortCol === 'videoSales') { va = parseSales(va); vb = parseSales(vb); }
+      else if (sortCol === 'videoAvgSales') { va = parseSales(va); vb = parseSales(vb); }
+      else { va = String(va || ''); vb = String(vb || ''); }
+      if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+  }
+  
+  return data.filter(d => {
+    // 品类筛选
+    if (catFilter !== 'all') {
+      if (catFilter === 'empty' && d.category) return false;
+      if (catFilter !== 'empty' && d.category !== catFilter) return false;
+    }
+    
+    // 判定结果筛选
+    if (resFilter !== 'all') {
+      const shampoo = checkShampooRule(d);
+      const hairmask = checkHairmaskRule(d);
+      const sPass = d.category === 'shop' ? false : shampoo.pass;
+      const hPass = d.category === 'shop' ? false : hairmask.pass;
+      const sPending = d.category !== 'shop' && shampoo.reasons.some(r => r.includes('待确认'));
+      const hPending = d.category !== 'shop' && hairmask.reasons.some(r => r.includes('待确认'));
+      const isShop = d.category === 'shop';
+      
+      if (resFilter === 'shampoo-pass' && !sPass) return false;
+      if (resFilter === 'hairmask-pass' && !hPass) return false;
+      if (resFilter === 'both-pass' && !(sPass && hPass)) return false;
+      if (resFilter === 'pending' && !(sPending || hPending)) return false;
+      if (resFilter === 'shop' && !isShop) return false;
+    }
+    
+    // 纯佣筛选
+    if (pureFilter === 'yes' && !d.isPure) return false;
+    if (pureFilter === 'no' && d.isPure) return false;
+    
+    // 搜索
+    if (search) {
+      if (!d.name.toLowerCase().includes(search) && !d.douyinId.toLowerCase().includes(search)) return false;
+    }
+    
+    return true;
+  });
+}
+
+function applyFilters() {
+  renderTable(getFilteredData());
+}
+
+function resetFilters() {
+  document.getElementById('filterCategory').value = 'all';
+  document.getElementById('filterResult').value = 'all';
+  document.getElementById('filterPure').value = 'all';
+  document.getElementById('searchInput').value = '';
+  sortCol = null;
+  applyFilters();
+}
+
+// ===================== 表头排序 =====================
+
+document.querySelectorAll('thead th').forEach(th => {
+  const col = th.innerText;
+  const colMap = {
+    '#': 'id', '达人名称': 'name', '抖音号': 'douyinId', '粉丝数': 'fans',
+    '视频销售额': 'videoSales', '视频均销': 'videoAvgSales', 'IPM': 'ipm'
+  };
+  const key = colMap[col];
+  if (key) {
+    th.style.cursor = 'pointer';
+    th.onclick = () => {
+      if (sortCol === key) { sortAsc = !sortAsc; }
+      else { sortCol = key; sortAsc = false; }
+      document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted'));
+      th.classList.add('sorted');
+      applyFilters();
+    };
+  }
+});
+
+// ===================== 导出/导入 =====================
+
+function exportCSV() {
+  const data = getFilteredData();
+  const headers = ['#','达人名称','抖音号','粉丝数','视频数','点赞中位','赞粉比','视频销售额','视频均销','IPM','带货品类','单条最高成交','女粉占比','纯佣','人群标签','洗发水判定','发膜判定'];
+  const rows = data.map(d => {
+    const s = checkShampooRule(d), h = checkHairmaskRule(d);
+    return [
+      d.id, d.name, d.douyinId, d.fans, d.videoCount, d.likeMedian, d.likeFanRatio,
+      d.videoSales, d.videoAvgSales, d.ipm,
+      catDisplay(d.category).replace('🏪 ',''),
+      d.topVideoSales, d.femaleRatio,
+      d.isPure ? '是':'否', d.audienceTag,
+      s.pass ? '通过' : (s.reasons.includes('待确认') ? '待确认' : '未通过'),
+      h.pass ? '通过' : (h.reasons.includes('待确认') ? '待确认' : '未通过')
+    ];
+  });
+  let csv = headers.join(',') + '\n';
+  rows.forEach(r => { csv += r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',') + '\n'; });
+  
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = '赫系达人筛选_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importJSON() {
+  document.getElementById('fileInput').click();
+}
+
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const text = ev.target.result;
+    let data;
+    try {
+      // 尝试JSON
+      const json = JSON.parse(text);
+      if (Array.isArray(json)) data = json;
+      else if (json.data && Array.isArray(json.data)) data = json.data;
+      else throw new Error('格式不支持');
+    } catch {
+      // 尝试CSV
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) return alert('文件为空');
+      const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+      data = lines.slice(1).map(line => {
+        const vals = parseCSVLine(line);
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+        return obj;
+      });
+    }
+    
+    // 转换到内部格式
+    const maxId = Math.max(0, ...darenData.map(d => d.id));
+    const newData = data.map((d, i) => ({
+      ...d,
+      id: maxId + i + 1,
+      category: d['带货品类'] ? (d['带货品类'] === '洗护日用品' ? 'wash' : d['带货品类'] === '美妆护肤' ? 'beauty' : d['带货品类'] === '店铺号' ? 'shop' : 'other') : '',
+      topVideoSales: d['单条最高成交'] || '',
+      femaleRatio: d['女粉占比'] || '',
+      isPure: d['纯佣'] === '是',
+      pureRelax: d['纯佣'] === '是',
+      audienceTag: d['人群标签'] || '',
+      name: d.name || d['达人名称'] || d['达人'] || '',
+      douyinId: d.douyinId || d['抖音号'] || '',
+      fans: d.fans || d['粉丝数'] || '',
+      videoCount: d.videoCount || d['视频数'] || '',
+      videoSales: d.videoSales || d['视频销售额'] || '',
+      videoAvgSales: d.videoAvgSales || d['视频均销'] || '',
+      selected: false
+    }));
+    
+    darenData = darenData.concat(newData);
+    applyFilters();
+    alert(`成功导入 ${newData.length} 条数据`);
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += c; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+// ===================== 初始化 =====================
+
+window.addEventListener('DOMContentLoaded', () => {
+  applyFilters();
+});
+
+// 键盘快捷键
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'f') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); exportCSV(); alert('已导出CSV'); }
+});
+</script>
+</body>
+</html>
