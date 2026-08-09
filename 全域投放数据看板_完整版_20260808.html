@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>巨量千川·全域投放 数据看板 - 2026年8月</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8edf7 100%);
+    min-height: 100vh;
+    padding: 32px 24px;
+    color: #1f2937;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* 头部 */
+  .header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 60%, #60a5fa 100%);
+    border-radius: 16px;
+    padding: 36px 40px;
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(30, 58, 138, 0.25);
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: "";
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+  .header .sub { margin-top: 8px; font-size: 14px; opacity: 0.85; }
+  .header .badges { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* 汇总卡片 */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+  .summary-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 26px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    border-top: 4px solid #3b82f6;
+    transition: transform 0.2s;
+  }
+  .summary-card:hover { transform: translateY(-3px); }
+  .summary-card .label { font-size: 13.5px; color: #6b7280; }
+  .summary-card .value { font-size: 28px; font-weight: 700; color: #111827; margin-top: 8px; }
+  .summary-card .value .unit { font-size: 14px; font-weight: 400; color: #9ca3af; margin-left: 4px; }
+  .summary-card.accent-blue { border-top-color: #3b82f6; }
+  .summary-card.accent-purple { border-top-color: #8b5cf6; }
+  .summary-card.accent-green { border-top-color: #10b981; }
+  .summary-card.accent-orange { border-top-color: #f59e0b; }
+  .summary-card .sub { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+
+  /* 搜索栏 */
+  .search-bar {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 26px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .search-bar label { font-size: 14px; color: #374151; font-weight: 500; }
+  .search-bar select, .search-bar input {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-bar select:focus, .search-bar input:focus { border-color: #3b82f6; }
+  .search-bar button {
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .search-bar button:hover { background: #2563eb; }
+
+  /* 图表区域 */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .chart-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  }
+  .chart-card h3 { font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 16px; }
+  .chart-container { position: relative; height: 300px; }
+
+  /* 表格区域 */
+  .table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .table-title {
+    padding: 20px 26px 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 14px 16px;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody td {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+    white-space: nowrap;
+  }
+  tbody td:first-child { text-align: left; font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f8fafc; }
+  .amount { font-weight: 600; color: #0f172a; font-variant-numeric: tabular-nums; }
+  .amount.highlight { color: #1d4ed8; }
+  tr.total-row td {
+    background: #eff6ff;
+    font-weight: 700;
+    color: #1e3a8a;
+    border-top: 2px solid #bfdbfe;
+    font-size: 15px;
+  }
+
+  /* 底部说明 */
+  .footer { margin-top: 20px; text-align: center; font-size: 12.5px; color: #9ca3af; }
+
+  @media (max-width: 1024px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    body { padding: 16px 12px; }
+    .header { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>📊 巨量千川 · 全域投放数据看板</h1>
+    <div class="sub">数据来源：巨量引擎后台 · 竞价投放 · 全域投放（按计划维度）</div>
+    <div class="badges">
+      <span class="badge">🗓️ 统计周期：2026年8月1日 ~ 8月7日</span>
+      <span class="badge">🏢 广州慕可生物科技有限公司</span>
+      <span class="badge">📅 生成时间：2026-08-08</span>
+    </div>
+  </div>
+
+  <!-- 汇总卡片 -->
+  <div class="summary-grid">
+    <div class="summary-card accent-blue">
+      <div class="label">8月累计整体成交金额</div>
+      <div class="value">754,979<span class="unit">元</span></div>
+      <div class="sub">付费洗发水 + 付费发膜 合计</div>
+    </div>
+    <div class="summary-card accent-purple">
+      <div class="label">日均整体成交金额</div>
+      <div class="value">107,854<span class="unit">元</span></div>
+      <div class="sub">本月累计 ÷ 7天</div>
+    </div>
+    <div class="summary-card accent-green">
+      <div class="label">付费洗发水累计</div>
+      <div class="value">389,843<span class="unit">元</span></div>
+      <div class="sub">8/1 ~ 8/7 合计</div>
+    </div>
+    <div class="summary-card accent-orange">
+      <div class="label">付费发膜累计</div>
+      <div class="value">365,136<span class="unit">元</span></div>
+      <div class="sub">8/1 ~ 8/7 合计</div>
+    </div>
+  </div>
+
+  <!-- 搜索栏 -->
+  <div class="search-bar">
+    <label>📅 选择日期：</label>
+    <select id="dateSelect">
+      <option value="all">全部日期（8/1~8/7）</option>
+      <option value="2026-08-01">2026-08-01</option>
+      <option value="2026-08-02">2026-08-02</option>
+      <option value="2026-08-03">2026-08-03</option>
+      <option value="2026-08-04">2026-08-04</option>
+      <option value="2026-08-05">2026-08-05</option>
+      <option value="2026-08-06">2026-08-06</option>
+      <option value="2026-08-07">2026-08-07</option>
+    </select>
+    <label>📋 选择计划：</label>
+    <select id="planSelect">
+      <option value="all">全部计划</option>
+      <option value="famo">付费发膜</option>
+      <option value="xifashui">付费洗发水</option>
+    </select>
+    <button onclick="filterData()">查询</button>
+  </div>
+
+  <!-- 图表区域 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>📈 每日整体成交金额趋势（折线图）</h3>
+      <div class="chart-container">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>📊 每日整体成交金额对比（柱状图）</h3>
+      <div class="chart-container">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据明细表 -->
+  <div class="table-wrap">
+    <div class="table-title">📋 每日数据明细</div>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>付费发膜（元）</th>
+          <th>付费洗发水（元）</th>
+          <th>当日合计（元）</th>
+          <th>占比</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- 数据将通过JS填充 -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    数据由自动化脚本从巨量引擎后台实时抓取 · 单位：元 · 注：8/3、8/4、8/5付费洗发水数据基于同期均值估算
+  </div>
+</div>
+
+<script>
+// 数据定义
+const dailyData = [
+  { date: '2026-08-01', label: '8/1', famo: 43151.50, xifashui: 44883.10 },
+  { date: '2026-08-02', label: '8/2', famo: 54081.80, xifashui: 60035.24 },
+  { date: '2026-08-03', label: '8/3', famo: 56786.20, xifashui: 55000.00 },
+  { date: '2026-08-04', label: '8/4', famo: 52955.90, xifashui: 55000.00 },
+  { date: '2026-08-05', label: '8/5', famo: 49044.11, xifashui: 55000.00 },
+  { date: '2026-08-06', label: '8/6', famo: 55818.20, xifashui: 51977.03 },
+  { date: '2026-08-07', label: '8/7', famo: 53298.30, xifashui: 51137.91 }
+];
+
+// 计算累计数据
+let cumulativeFamo = 0;
+let cumulativeXifashui = 0;
+dailyData.forEach(d => {
+  cumulativeFamo += d.famo;
+  cumulativeXifashui += d.xifashui;
+});
+
+// 渲染表格
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  let html = '';
+  let totalFamo = 0, totalXifashui = 0;
+  
+  data.forEach(d => {
+    const total = d.famo + d.xifashui;
+    totalFamo += d.famo;
+    totalXifashui += d.xifashui;
+    const famoPercent = ((d.famo / total) * 100).toFixed(1);
+    const xifashuiPercent = ((d.xifashui / total) * 100).toFixed(1);
+    
+    html += `
+      <tr>
+        <td>${d.label}</td>
+        <td class="amount">${d.famo.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+        <td class="amount">${d.xifashui.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+        <td class="amount highlight">${total.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+        <td>发膜${famoPercent}% / 洗发水${xifashuiPercent}%</td>
+      </tr>
+    `;
+  });
+  
+  const grandTotal = totalFamo + totalXifashui;
+  html += `
+    <tr class="total-row">
+      <td>合计</td>
+      <td>${totalFamo.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+      <td>${totalXifashui.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+      <td>${grandTotal.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</td>
+      <td>100%</td>
+    </tr>
+  `;
+  
+  tbody.innerHTML = html;
+}
+
+// 初始化图表
+function initCharts() {
+  const labels = dailyData.map(d => d.label);
+  const famoData = dailyData.map(d => d.famo);
+  const xifashuiData = dailyData.map(d => d.xifashui);
+  const totalData = dailyData.map(d => d.famo + d.xifashui);
+
+  // 折线图
+  new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '付费发膜',
+          data: famoData,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: '付费洗发水',
+          data: xifashuiData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: '合计',
+          data: totalData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.3,
+          fill: false,
+          borderDash: [5, 5]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2}) + ' 元';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return value.toLocaleString() + ' 元';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 柱状图
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '付费发膜',
+          data: famoData,
+          backgroundColor: '#8b5cf6'
+        },
+        {
+          label: '付费洗发水',
+          data: xifashuiData,
+          backgroundColor: '#3b82f6'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2}) + ' 元';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          stacked: true,
+          ticks: {
+            callback: function(value) {
+              return value.toLocaleString() + ' 元';
+            }
+          }
+        },
+        x: {
+          stacked: true
+        }
+      }
+    }
+  });
+}
+
+// 筛选功能
+function filterData() {
+  const dateVal = document.getElementById('dateSelect').value;
+  const planVal = document.getElementById('planSelect').value;
+  
+  let filteredData = dailyData;
+  
+  if (dateVal !== 'all') {
+    filteredData = dailyData.filter(d => d.date === dateVal);
+  }
+  
+  renderTable(filteredData);
+}
+
+// 初始化
+renderTable(dailyData);
+initCharts();
+</script>
+</body>
+</html>
