@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赫系强种草谈判助手 v5</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f4f3fb; min-height: 100vh; padding: 20px 14px 60px; color: #2b2b3a;
+  }
+  .app { max-width: 680px; margin: 0 auto; }
+
+  /* ===== 顶部 ===== */
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .top .logo {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, #6d4aff, #9b6dff);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    box-shadow: 0 4px 12px rgba(109,74,255,.3);
+  }
+  .top h1 { font-size: 20px; font-weight: 800; line-height: 1.2; }
+  .top p { font-size: 12px; color: #8a8aa3; margin-top: 2px; }
+
+  /* ===== 卡片通用 ===== */
+  .card {
+    background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(90,70,200,.06);
+    padding: 18px; margin-bottom: 14px;
+  }
+  .card-title { font-size: 14px; font-weight: 800; color: #4a3f8f; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-title .step-num {
+    width: 20px; height: 20px; border-radius: 50%; background: #6d4aff; color: #fff;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  /* ===== 输入 ===== */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .field label { display: block; font-size: 12px; color: #7a7a92; margin-bottom: 5px; font-weight: 600; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #e3e0f2; border-radius: 9px;
+    font-size: 14px; background: #fafaff; color: #2b2b3a; outline: none; transition: border-color .2s; font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #6d4aff; background: #fff; }
+  .btn-primary {
+    width: 100%; margin-top: 14px; padding: 13px; border: none; border-radius: 11px;
+    background: linear-gradient(90deg, #6d4aff, #8f5cff); color: #fff;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 5px 16px rgba(109,74,255,.3); transition: transform .1s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+  /* ===== 进度 ===== */
+  .progress-head { display: flex; justify-content: space-between; font-size: 12px; color: #8a8aa3; margin-bottom: 6px; }
+  .progress-head b { color: #4a3f8f; font-size: 13px; }
+  .progress-track { height: 10px; background: #eceaf8; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #6d4aff, #a78bff); transition: width .5s ease; }
+  .progress-state { text-align: center; font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .progress-state.ok { color: #6d4aff; }
+  .progress-state.warn { color: #e8960c; }
+  .progress-state.floor { color: #d8434b; }
+
+  /* ===== 轮次卡片 ===== */
+  .round { border: 1.5px solid #e3e0f2; border-radius: 12px; padding: 14px; margin-bottom: 14px; background: #fff; animation: fadeIn .35s ease; }
+  .round.done { border-color: #bfe8d0; background: #f7fdf9; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .round-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .round-tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+  .round-tag.first { background: #efeaff; color: #6d4aff; }
+  .round-tag.mid { background: #eef2fb; color: #5b6b9b; }
+  .round-tag.warn { background: #fdf0dc; color: #c47d0a; }
+  .round-tag.floor { background: #fde8e8; color: #d33; }
+  .round-price { font-size: 17px; font-weight: 800; margin-left: auto; }
+  .round-price small { font-size: 11px; color: #9a9ab0; font-weight: 500; margin-left: 4px; }
+
+  .sec-label { font-size: 12px; font-weight: 700; color: #6d4aff; margin: 12px 0 6px; display: flex; align-items: center; gap: 4px; }
+  .script-box {
+    background: #faf9ff; border: 1px solid #ece9fb; border-radius: 9px;
+    padding: 11px 13px; font-size: 14px; line-height: 1.75; color: #3a3a4e;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* ===== 输入达人回复 ===== */
+  .reply-wrap { display: flex; gap: 8px; align-items: flex-end; }
+  .reply-wrap textarea { flex: 1; min-height: 58px; resize: vertical; }
+  .btn-analyze {
+    padding: 11px 15px; border: none; border-radius: 9px; white-space: nowrap;
+    background: linear-gradient(90deg, #6d4aff, #8f5cff); color: #fff;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .btn-analyze:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ===== 应答卡 ===== */
+  .analysis { display: none; border: 1.5px solid #d9ccff; background: #fbf9ff; border-radius: 10px; padding: 13px 14px; margin-top: 12px; animation: fadeIn .35s ease; }
+  .intent-line { font-size: 13px; color: #4a3f8f; font-weight: 600; margin-bottom: 8px; line-height: 1.6; }
+  .reply-block { margin-bottom: 10px; }
+  .reply-block .tag { font-size: 11px; font-weight: 800; display: inline-block; margin-bottom: 5px; }
+  .reply-block .tag.main { color: #6d4aff; }
+  .reply-block .tag.alt { color: #8a8aa3; }
+  .reply-block .txt { background: #fff; border: 1px solid #ece9fb; border-radius: 8px; padding: 9px 12px; font-size: 14px; line-height: 1.75; white-space: pre-wrap; }
+
+  details { margin-top: 6px; }
+  details summary { font-size: 12px; font-weight: 700; color: #8a8aa3; cursor: pointer; padding: 4px 0; user-select: none; }
+  details[open] summary { color: #6d4aff; }
+  .detail-body { font-size: 13px; line-height: 1.8; color: #3a3a4e; padding: 8px 10px; background: #f6f4ff; border-radius: 8px; margin-top: 6px; }
+  .detail-body .kv { display: block; margin-bottom: 4px; }
+  .detail-body .kv b { color: #4a3f8f; }
+  .branch-item { border-left: 3px solid #d8d0f5; padding: 4px 0 4px 10px; margin: 5px 0; font-size: 13px; line-height: 1.7; }
+  .branch-item .if { color: #b4710a; font-weight: 700; }
+  .branch-item .then { color: #4a3f8f; font-weight: 700; }
+
+  /* ===== 按钮 ===== */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-copy { background: #efeaff; color: #6d4aff; }
+  .btn-accept { background: #e2f7ec; color: #1d9e58; }
+  .btn-reject { background: #fde8e8; color: #c9373c; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-mini { padding: 5px 10px; font-size: 12px; }
+
+  .result-box { display: none; background: #f0fbf4; border: 1.5px solid #bfe8d0; border-radius: 10px; padding: 13px 14px; margin-top: 12px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; }
+  .result-box.reject { background: #fdf4f4; border-color: #f2c9c9; }
+
+  .footer { text-align: center; font-size: 11px; color: #b4b4c8; margin-top: 16px; }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #33334a; color: #fff; padding: 10px 22px; border-radius: 99px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 99; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } .reply-wrap { flex-direction: column; align-items: stretch; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo">💬</div>
+    <div>
+      <h1>赫系强种草谈判助手</h1>
+      <p>挂车强种草 · 目标成交额 · 每轮降100 · 佣金统一5%</p>
+    </div>
+  </div>
+
+  <!-- Step 1: 参数设置 -->
+  <div class="card" id="inputCard">
+    <div class="card-title"><span class="step-num">1</span>设置谈判参数</div>
+    <div class="grid2">
+      <div class="field"><label>达人报价（元）</label><input type="number" id="inQuote" placeholder="如 1000" min="1"></div>
+      <div class="field"><label>营销底价（元）</label><input type="number" id="inFloor" placeholder="如 600" min="1"></div>
+      <div class="field"><label>达人类型</label>
+        <select id="inType">
+          <option value="达人">达人</option>
+          <option value="垂类强种草达人">垂类强种草达人</option>
+          <option value="腰部KOC">腰部KOC</option>
+          <option value="头部KOL">头部KOL</option>
+          <option value="小达人">小达人</option>
+          <option value="MCN机构">MCN机构</option>
+        </select>
+      </div>
+      <div class="field"><label>合作产品</label>
+        <select id="inProduct">
+          <option value="赫系轻盈洗发水">赫系轻盈洗发水</option>
+          <option value="赫系发膜">赫系发膜</option>
+          <option value="赫系其他产品">赫系其他产品</option>
+        </select>
+      </div>
+      <div class="field"><label>每轮降幅（元）</label><input type="number" id="inStep" value="100" min="10" step="10"></div>
+    </div>
+    <button class="btn-primary" id="btnStart">▶ 开始谈判</button>
+  </div>
+
+  <!-- Step 2: 进度 -->
+  <div class="card" id="progressCard" style="display:none;">
+    <div class="card-title"><span class="step-num">2</span>谈判进度</div>
+    <div class="progress-head"><span>达人报价 <b id="labQuote">—</b></span><span>当前 <b id="labCurrent">—</b></span><span>底价 <b id="labFloor">—</b></span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-state" id="labState">谈判中</div>
+  </div>
+
+  <!-- Step 3: 轮次 -->
+  <div id="timelineWrap" style="display:none;">
+    <div class="card-title"><span class="step-num">3</span>谈判轮次 <span style="font-size:11px;color:#9a9ab0;font-weight:500;">（每轮粘贴达人回复，AI 生成针对性应答）</span></div>
+    <div id="timeline"></div>
+  </div>
+
+  <div class="footer">赫系商务内部工具 · 强种草挂车带货 · 双击标题可重置</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var S = { quote: 0, floor: 0, step: 100, current: 0, round: 0, running: false, finished: false, type: '达人', product: '赫系轻盈洗发水' };
+  function $(id) { return document.getElementById(id); }
+  var timeline = $('timeline');
+
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1600); }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast('✅ 已复制'); }, function () { fallbackCopy(text); });
+    } else { fallbackCopy(text); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('✅ 已复制'); } catch (e) { toast('复制失败，请手动复制'); }
+    document.body.removeChild(ta);
+  }
+  function money(n) { return '¥' + n.toLocaleString(); }
+  function atFloor() { return S.current <= S.floor; }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  /* ============ 达人原话特征提取 ============ */
+  function extractHighlights(text) {
+    var t = text || '';
+    var hl = { price: null, prices: [], product: '', reason: '', quote: '', pain: '', mention: '' };
+    var nums = t.match(/(\d[\d,]*)/g) || [];
+    hl.prices = nums.map(function (n) { return n.replace(/,/g, ''); });
+    hl.price = hl.prices.length ? hl.prices[0] : null;
+    var prods = ['洗发水', '发膜', '护发素', '洗护', '护发', '产品'];
+    for (var i = 0; i < prods.length; i++) { if (t.indexOf(prods[i]) > -1) { hl.product = prods[i]; break; } }
+    var reasonKws = [
+      { kw: ['跑很好', '跑得好', '跑得不错', '数据好', '流量好'], label: '数据好' },
+      { kw: ['销量', '爆款', '卖爆', '卖得好', '卖得很好', '转化'], label: '卖得好' },
+      { kw: ['老客户', '都是这个价', '老价格'], label: '老客户' },
+      { kw: ['粉丝', '粉丝多', '粉丝量'], label: '粉丝量' },
+      { kw: ['品质', '质量', '效果', '好用'], label: '品质好' },
+      { kw: ['品牌', '知名度', '大牌'], label: '品牌' }
+    ];
+    for (var j = 0; j < reasonKws.length; j++) { var g = reasonKws[j]; for (var k = 0; k < g.kw.length; k++) { if (t.indexOf(g.kw[k]) > -1) { hl.reason = g.label; break; } } if (hl.reason) break; }
+    var painKws = [
+      { kw: ['压价', '压我价', '压低', '压得'], label: '被压价' },
+      { kw: ['太低', '做不了', '给不了', '不接', '不行'], label: '价格不满' },
+      { kw: ['亏', '吃亏', '不划算'], label: '怕亏' },
+      { kw: ['考虑', '想想', '商量', '再看看'], label: '犹豫' },
+      { kw: ['别家', '其他品牌', '别人', '另一家'], label: '比价' },
+      { kw: ['爆品', '出过爆', '功劳', '贡献', '之前'], label: '历史贡献' },
+      { kw: ['老客户', '老价格', '老搭档'], label: '老关系' }
+    ];
+    for (var pj = 0; pj < painKws.length; pj++) { var pg = painKws[pj]; for (var pk = 0; pk < pg.kw.length; pk++) { if (t.indexOf(pg.kw[pk]) > -1) { hl.pain = pg.label; break; } } if (hl.pain) break; }
+    var clean = t.replace(/^(宝|宝子|老师|亲|亲爱的|你好|hi|哈喽|嗨)[~～，,。 ]*/i, '');
+    var sentences = clean.split(/[，。！？～!?\n]/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length >= 2; });
+    var skipWords = ['给不了', '做不了', '不行', '太低', '不接', '没办法', '抱歉', '不好意思'];
+    for (var si = 0; si < sentences.length; si++) {
+      var s = sentences[si], skip = false;
+      for (var wi = 0; wi < skipWords.length; wi++) { if (s.indexOf(skipWords[wi]) > -1) { skip = true; break; } }
+      if (!skip && s.length <= 20) { hl.quote = s; break; }
+    }
+    if (!hl.quote && sentences.length) hl.quote = sentences[0].slice(0, 18);
+    return hl;
+  }
+
+  /* ============ 意图识别 ============ */
+  function classify(text) {
+    var t = text || '';
+    var rules = [
+      { key: 'star_contributor', name: '爆品功臣', kw: ['爆品','出过爆','之前给你们','给你们做过','老功臣','当初','之前合作','出过','做过','爆款','以前','老熟','老伙伴','老搭档','合作这么久','合作那么久','给你们品牌'] },
+      { key: 'anchor_old_client', name: '老客户锚点', kw: ['老客户','都是这个价','一直这个价','老价格','破例','都是这个价格','客户都是','老合作'] },
+      { key: 'data_boast', name: '数据自抬', kw: ['跑很好','跑得好','数据好','最近很好','销量','爆款','转化','起量','卖得很好','跑得不错','流量好','粉丝'] },
+      { key: 'price_too_low', name: '嫌价格低', kw: ['太低','做不了','不接这么低','最少','低于','太少了','这个价不行','给不了','不够','太低了吧','价格太低'] },
+      { key: 'competitor', name: '别家更高', kw: ['别家','其他品牌','别人给','另一家','同行','有人出','别的地方','其他家'] },
+      { key: 'no_orders', name: '不接商单', kw: ['不接','档期满','没档期','排期','最近不接','不打算接','档期'] },
+      { key: 'delay', name: '拖延犹豫', kw: ['考虑','商量','再看看','想想','过两天','回你','考虑一下','和团队','商量一下','考虑考虑'] },
+      { key: 'want_benefits', name: '要权益', kw: ['授权','佣金','挂车','分成','权益','加钱','多给','要投流','赠品','样品'] },
+      { key: 'raise_price', name: '想涨价', kw: ['涨价','提价','比之前高','要涨','更高价','不划算','太低了吧'] },
+      { key: 'cut_our_price', name: '砍我方价', kw: ['再低','优惠','便宜','少一点','再让','降一点','能不能低','贵了','太高了'] },
+      { key: 'reject', name: '拒绝合作', kw: ['不合作','算了','不合适','没兴趣','不考虑','就这样','不打算','不用了','谢谢'] }
+    ];
+    var hits = [];
+    rules.forEach(function (r) {
+      var hit = 0, matched = [];
+      r.kw.forEach(function (k) { if (t.indexOf(k) > -1) { hit++; matched.push(k); } });
+      if (hit > 0) hits.push({ key: r.key, name: r.name, hit: hit, matched: matched });
+    });
+    var best = null;
+    var priority = { star_contributor: 5, data_boast: 3, price_too_low: 2, anchor_old_client: 1 };
+    hits.forEach(function (h) {
+      if (!best) { best = h; return; }
+      var hp = priority[h.key] || 0, bp = priority[best.key] || 0;
+      if (h.hit > best.hit || (h.hit === best.hit && hp > bp)) best = h;
+    });
+    return best || { key: 'general', name: '通用', hit: 0, matched: [] };
+  }
+
+  /* ============ 话术生成（强种草 + 成交额导向） ============ */
+      function buildScript(intentKey, hl) {
+    var price = money(S.current);
+    var prod = hl.product ? ('你们' + hl.product) : '你们';
+    var ack = '', body = '', extra = '', close = '';
+
+    switch (intentKey) {
+      case 'star_contributor':
+        ack = '宝，之前给咱们品牌出过爆品我们一直记着呢，宝的种草能力我们是最认可的～';
+        body = '正因为是熟人了，这次的价格也是按宝的贡献和账号价值认真评估的，' + price + ' 已经是这批预算里给宝的最高档了';
+        extra = '投流、佣金这些权益也都给宝配齐了，这次合作咱们一定给宝安排明白～';
+        close = '';
+        break;
+      case 'data_boast':
+        ack = '宝，' + prod + '最近跑得好我们都看在眼里，正是看重宝的账号才来找宝合作的～';
+        body = '价格也是比着宝的数据和账号价值评估的，' + price + ' 已经是这批预算里给宝的最高档了';
+        extra = '投流我们也会重点给宝安排，把宝的好内容推给更多人～';
+        close = '';
+        break;
+      case 'anchor_old_client':
+        ack = '宝，老客户价我们理解的，宝的带货能力我们也一直认可～';
+        body = '这次按新合作标准来，' + price + ' 前置 + 投流 + 佣金5%，给宝的价格在同期达人也算高的了';
+        extra = '第一次跑出数据，后面我们集团的品都会优先想着宝～';
+        close = '';
+        break;
+      case 'price_too_low':
+        if (atFloor()) {
+          ack = '宝，' + price + ' 是按宝的账号价值评估过的定价，这批预算确实只能给到这么多了～';
+          body = '不过投流、佣金这些权益都给宝配齐，综合算下来不低的';
+          extra = '这单跑出成绩，后面档期和资源都优先给宝排～';
+          close = '';
+        } else {
+          ack = '宝，价格上我们给到 ' + price + '，账期还能帮宝缩到 15 天，资金周转快～';
+          body = '投流、佣金这些也都配齐，综合到手不会比别家低的';
+          extra = '咱们合作是要长期做的，后面都会优先想着宝～';
+          close = '';
+        }
+        break;
+      case 'competitor':
+        ack = '宝，别家给多少我们不比，咱把方案的价值跟宝讲清楚～';
+        body = '咱们 ' + price + ' 前置 + 投流全包 + 佣金5%，投流把宝的内容推给精准人群，账号数据也能带起来';
+        extra = '算总账的话，比单拿一笔稿费要划算～';
+        close = '';
+        break;
+      case 'no_orders':
+        ack = '宝，理解档期紧张～是排期问题还是对合作形式有顾虑呀？';
+        body = '咱们这次挂车强种草，脚本素材都备好，宝就当日常更新一条视频顺手赚佣金';
+        extra = '第一次跑通，后面都优先想着宝～';
+        close = '';
+        break;
+      case 'delay':
+        ack = '宝，理解要对比考虑～这批项目名额不多，价格合适的我们优先锁档期';
+        body = '方案是 ' + price + ' 前置 + 投流全包 + 佣金5%';
+        extra = '宝考虑好随时说，我帮宝把档期留好～';
+        close = '';
+        break;
+      case 'want_benefits':
+        ack = '宝，权益打包聊：佣金5%、投流、授权6个月、赠品都能给，授权过往达人都免费送～';
+        body = price + ' 前置 + 投流全包，这套打包下来宝的到手收益是划算的';
+        extra = '长期合作的话，权益和资源都会越来越倾斜～';
+        close = '';
+        break;
+      case 'raise_price':
+        ack = '宝，这个报价比星图同档预算高不少，一下贵太多不好跟品牌方交代～';
+        body = '要不先按 ' + price + ' 试一期，数据好了我立刻帮宝申请提预算';
+        extra = '有数据说话，提价才提得动～';
+        close = '';
+        break;
+      case 'cut_our_price':
+        ack = '宝，合作形式很简单：挂车强种草，脚本素材我们提供，宝基本零成本～';
+        body = price + ' 是给宝争取到的价位，同体量博主我们大多 ' + money(S.floor + S.step * 2) + ' 左右合作';
+        extra = '宝要再让的话，权益上就得减一些了～';
+        close = '';
+        break;
+      case 'reject':
+        ack = '宝，那不强求～如果价格不合适，可以告诉我心理价位，我去帮宝争取';
+        body = '不行咱们下次再合作，保持联系～';
+        extra = '';
+        close = '';
+        break;
+      default:
+        ack = '宝，咱们这套方案：' + price + ' 前置 + 投流全包 + 佣金5%';
+        body = '挂车强种草，真实使用 + 口播安利，账号数据也能带起来';
+        extra = '宝看看哪里不清楚，我随时细讲～';
+        close = '';
+        break;
+    }
+    return (ack ? ack + ' ' : '') + body + (extra ? '，' + extra : '') + (close ? '，' + close : '');
+  }
+
+      function buildAltScript(intentKey, hl) {
+    var price = money(S.current);
+    var prod = hl.product ? ('你们' + hl.product) : '你们';
+    switch (intentKey) {
+      case 'star_contributor':
+        return '宝，出过爆品的交情咱们肯定认～正因为是老搭档，这次给的方案也更厚道：' + price + ' 前置 + 投流全包 + 佣金5%，后面所有新品都会优先想到宝～';
+      case 'data_boast':
+        return '宝子～' + prod + '数据好我们当然认可，所以才想给宝配套方案：' + price + ' 前置 + 投流全包 + 佣金5%，把宝的数据变成收益，比单拿稿费划算～';
+      case 'anchor_old_client':
+        return '宝，老客户价我们理解～首次合作按新标准来：' + price + ' 前置 + 投流全包 + 佣金5%，有投流加持数据会更好，一次跑通后面长期合作机会多～';
+      case 'price_too_low':
+        if (atFloor()) return '宝，' + price + ' 是按行情评估的定价，真的没水分～投流、佣金都配齐，综合算下来宝不吃亏～';
+        return '宝，要不这样：前置费按 ' + price + ' 来，账期缩到15天；投流全包 + 佣金5%照给，算总账比单纯压价划算～';
+      case 'competitor':
+        return '宝，稿费只是一部分，核心是投流：' + price + ' 前置 + 投流全包 + 佣金5% + 长期多品合作，别家给单次稿费，我们给流量+长期～';
+      case 'no_orders':
+        return '宝，最近看宝发的视频其实没挂小黄车，挂上按2%转化算至少多赚好几千～咱们这次挂车强种草 + 投流全包，就当日常更新顺手多一份收入～';
+      case 'delay':
+        return '宝，不急～咱们集团对达人复投很重视，这次跑出数据后面都优先排宝，投流全包 + 佣金5%，长期对宝是双赢～';
+      case 'want_benefits':
+        return '宝，价格 + 权益打包：' + price + ' 前置 + 投流全包 + 佣金5% + 多送产品体验（可做粉丝福利），算总账绝对划算～';
+      case 'raise_price':
+        return '宝，涨价要走品牌方重新审批，周期长。先按 ' + price + ' 试一期，数据好了我立刻去申请涨预算～';
+      case 'cut_our_price':
+        return '宝，' + price + ' 是给宝争取到的价位，同体量达人大多这个区间，投流还单独全包，已经很能打了～';
+      case 'reject':
+        return '理解的宝～那宝的心理价位大概是多少？我去帮宝争取下，能批咱就按新的来～';
+      default:
+        return '宝，' + price + ' 前置 + 投流全包 + 佣金5%，挂车强种草，账号数据也能带起来，宝先看看～';
+    }
+  }
+
+  /* ============ 应答引擎 ============ */
+  function respond(intent, text) {
+    var hl = extractHighlights(text);
+    var c = { surface:'', real:'', concern:'', strategy:'', why:'', script:'', altScript:'', branches:[], priceAction:'hold', priceNote:'', tip:'' };
+    var price = money(S.current);
+    var next = money(Math.max(S.floor, S.current - S.step));
+    var p = S.product;
+
+    switch (intent.key) {
+      case 'star_contributor':
+        c.surface = '拿「之前出过爆品」的功劳当筹码，抗议压价，要特殊待遇';
+        c.real = '两个目的：一是要面子（贡献要被认可），二是要实惠（想拿更高价）——但既然有爆品历史，说明合作意愿强、是优质老搭档，值得认真对待';
+        c.concern = '在意「贡献是否被认可」+「有没有被区别对待」+「这次能不能多赚」';
+        c.strategy = '先肯定历史贡献（给足面子）→ 价格按贡献认真评估（不否定、不让步太多）→ 把话题引向「投流放大 + 成交分成」——这次能赚多少，取决于成交额而非稿费';
+        c.why = '功臣型达人不吃卖惨也不吃硬压；肯定贡献 + 给出「赚大头的路径」（投流+分成），既保面子又给实惠，比单纯降价更聪明';
+        c.priceAction = 'hold';
+        c.priceNote = '本轮价格保持不变，先给足面子 + 强调投流和成交分成，不动价格';
+        c.script = buildScript('star_contributor', hl);
+        c.altScript = buildAltScript('star_contributor', hl);
+        c.branches = [
+          { if: '对方说「那我这次不接了，没意思」', then: '回应：正因为看重宝，这次方案才把投流拉满——上次爆品靠自然流，这次加上投流只会更炸，宝不看稿费看总账' },
+          { if: '对方说「最少也要加一点」', then: '可以小幅让利（降 ' + S.step + ' 元）但同步强调投流和分成才是大头，让利换口碑' },
+          { if: '对方问「成交分成怎么算」', then: '明确：佣金统一5%，挂车成交都有分成，投流全包——成交越多宝赚越多，这是稿费给不了的' }
+        ];
+        c.tip = '本轮价格不变。功臣型达人不吃卖惨也不吃硬压，先给足面子，把焦点从稿费引向投流 + 成交分成。';
+        break;
+      case 'anchor_old_client':
+        c.surface = '用「老客户价」撑住报价，摆出「不能破例」的姿态';
+        c.real = '真实目的是试探我方诚意、探底价，老客户价更多是谈判托词——没有达人会拒绝多一个赚钱机会';
+        c.concern = '在意「是否被区别对待」+「价格底线」+「合作是否长期稳定」';
+        c.strategy = '承认老客户价合理（不对立）→ 把话题从「价格」引向「首次合作特批 + 投流 + 强种草成交分成」';
+        c.why = '正面否定老客户价会激化对立；承认它、再用「首次合作」给台阶，对方容易下';
+        c.priceAction = 'down';
+        c.priceNote = '本轮降 ' + S.step + ' 元到 ' + next + '，作为「首次合作诚意价」';
+        c.script = buildScript('anchor_old_client', hl);
+        c.altScript = buildAltScript('anchor_old_client', hl);
+        c.branches = [
+          { if: '对方说「不能破例，老客户都这个价」', then: '回应：不是让宝破例，是品牌方对首次合作的特批额度，只此一次，后续可以再谈' },
+          { if: '对方问「投流怎么投、投多少」', then: '顺势给具体投流承诺，把焦点从价格转到投流 + 强种草方案，推进成交' },
+          { if: '对方说「那下次再说吧」', then: '用名额稀缺 + 长期合作挽留：这个项目所需达人不多，价格合适的会优先锁档期' }
+        ];
+        c.tip = '本轮已自动降 ' + S.step + ' 元。若对方仍咬死，2 轮后接近底价时改用权益置换。';
+        break;
+      case 'data_boast':
+        c.surface = '用「数据好/销量好」合理化高价，暗示「我值这个价」';
+        c.real = '真实意图是抬高议价筹码；同时说明对方是真优质账号，值得争取';
+        c.concern = '在意「数据价值是否被认可」+「数据能否变现」';
+        c.strategy = '先认可数据（拉近关系）→ 直接亮投流王牌（预算全包） + 强种草成交分成（优质达人更吃这个）';
+        c.why = '对优质达人，降价反而显得「你的数据不值钱」；给投流 + 成交分成等于承认 ta 的价值并放大它';
+        c.priceAction = 'down';
+        c.priceNote = '本轮降 ' + S.step + ' 元到 ' + next + '，同时投流承诺拉满';
+        c.script = buildScript('data_boast', hl);
+        c.altScript = buildAltScript('data_boast', hl);
+        c.branches = [
+          { if: '对方认可投流方案', then: '立刻把投流细节（预算/周期/人群包）讲清楚，顺势推进成交' },
+          { if: '对方仍嫌低，说「数据这么好才给这点」', then: '回应：正因为认可数据，才给到 ' + price + ' + 全包投流 + 佣金5%，加上强种草成交分成，综合收益比纯高价更有价值' },
+          { if: '对方要数据/案例证明', then: '发合作达人爆款种草案例截图，用事实说话' }
+        ];
+        c.tip = '优质达人更吃投流 + 成交分成承诺而非降价，这轮话术重点在此。';
+        break;
+      case 'price_too_low':
+        c.surface = '明确表示价格接受不了，态度直接';
+        c.real = '可能是真嫌低，也可能是试探能否再加价——先给台阶，别急着判死刑';
+        c.concern = '在意到手收益，需要看到「除了价格之外的好处」';
+        c.strategy = atFloor() ? '已触底：只谈权益，不再降价' : '账期置换 + 佣金统一5%（明确）+ 投流 + 强种草成交分成补足';
+        c.why = atFloor() ? '触底后继续降价只会让对方得寸进尺，权益置换才能守住底线' : '对方嫌的是「价格」，不是「合作」；用账期/投流/成交分成给足收益想象空间';
+        c.priceAction = atFloor() ? 'floor' : 'down';
+        c.priceNote = atFloor() ? '已触底 ' + money(S.floor) + '，不再降' : '本轮降 ' + S.step + ' 元到 ' + next + '，同步说明佣金统一5%';
+        c.script = buildScript('price_too_low', hl);
+        c.altScript = buildAltScript('price_too_low', hl);
+        c.branches = atFloor() ? [
+          { if: '对方说「那算了」', then: '不硬留，用长期主义收尾：这次不行没关系，后面有合适机会再合作，保持关系' },
+          { if: '对方问「权益具体有哪些」', then: '完整罗列：投流 + 佣金5% + 赠品 + 分发 + 后续档期优先' },
+          { if: '对方坚持要更高价', then: '启用「抽离再谈」：问对方可接受的最低价，去上面争取，不现场答应' }
+        ] : [
+          { if: '对方问「佣金多少」', then: '明确回应：佣金统一 5%，投流全包，挂车成交分成照给，收益稳定' },
+          { if: '对方问「账期能保证吗」', then: '回应：合同写明，公司流程固定，可写进合同条款' },
+          { if: '对方继续压价', then: '下一轮再降 ' + S.step + ' 元，同时开始绑权益（赠品/佣金/分发）' }
+        ];
+        c.tip = atFloor() ? '🔴 已到营销底价，绝不再降。本轮只谈权益。' : '本轮已自动降 ' + S.step + ' 元。优先用「账期/投流/成交分成」转移价格焦点。';
+        break;
+      case 'competitor':
+        c.surface = '提到别家给更高价，施压我方跟价';
+        c.real = '可能是真实比价，更多是虚张声势探底——别家报价无从验证，别被带节奏';
+        c.concern = '在意综合收益（钱 + 流量 + 长期），不是单纯最高价';
+        c.strategy = '不陷入比价战 → 讲市场现状 + 综合收益（投流/佣金/强种草成交分成）→ 强调「总账」更高';
+        c.why = '一旦跟价就进入对方节奏；跳出价格谈综合收益，才能掌握主动权';
+        c.priceAction = 'hold';
+        c.priceNote = '价格保持不变，用市场现状 + 综合收益回应';
+        c.script = buildScript('competitor', hl);
+        c.altScript = buildAltScript('competitor', hl);
+        c.branches = [
+          { if: '对方动摇，问「投流具体怎么投」', then: '顺势给投流细节，把话题拉回合作本身，推进成交' },
+          { if: '对方坚持「别家就是给得多」', then: '回应：如果宝更看重短期高价，我们也尊重；但我们能给的是长期 + 综合收益，宝权衡下' },
+          { if: '对方要求「匹配别家价格」', then: '婉拒：预算确实有限，但权益可以加（赠品/佣金/分发），用权益补差价' }
+        ];
+        c.tip = '本轮价格不变。避免陷入比价战，强调「综合收益」和「长期合作」。';
+        break;
+      case 'no_orders':
+        c.surface = '以档期/不接单为由推拒';
+        c.real = '可能是真忙，也可能是婉拒（对品牌/价格不感兴趣）——需要探出真实原因';
+        c.concern = '在意时间成本 + 合作形式是否麻烦';
+        c.strategy = '先探因（排期还是顾虑）→ 强调强种草挂车轻松赚佣金（日常更新）→ 算账破局';
+        c.why = '不解决「为什么不接」的根本问题，降价也没用；把合作包装成「顺便赚钱」，降低决策门槛';
+        c.priceAction = 'hold';
+        c.priceNote = '价格保持不变，先解决「为什么不接」的根本问题';
+        c.script = buildScript('no_orders', hl);
+        c.altScript = buildAltScript('no_orders', hl);
+        c.branches = [
+          { if: '对方说是排期问题', then: '给弹性档期：到货后出片即可，时间宝定，我们配合' },
+          { if: '对方说「对品牌不熟/没兴趣」', then: '发品牌背书 + 合作案例，用事实建立信任' },
+          { if: '对方沉默不回复', then: '隔 1-2 天破冰：「领导很看重和宝的合作，特意留了预算，宝考虑下呀」' }
+        ];
+        c.tip = '本轮价格不变，先解决「为什么不接」的根本问题。';
+        break;
+      case 'delay':
+        c.surface = '说要考虑/商量，不拒绝也不答应';
+        c.real = '犹豫中——可能是想比较别家、或等更好的机会，是「可争取」信号而非死局';
+        c.concern = '在意决策风险 + 是否有更好的选择';
+        c.strategy = '制造稀缺（所需达人不多，先到先得）→ 长期合作 + 成交分成诱惑 → 温和推进';
+        c.why = '拖延的人需要「推动力」和「理由」：稀缺性制造紧迫感，长期合作 + 成交分成给足决策理由';
+        c.priceAction = 'hold';
+        c.priceNote = '价格保持不变，用稀缺性 + 长期合作 + 成交分成推动决策';
+        c.script = buildScript('delay', hl);
+        c.altScript = buildAltScript('delay', hl);
+        c.branches = [
+          { if: '对方问细节', then: '提供完整方案（价格/权益/档期/收片要求），消除所有疑虑' },
+          { if: '对方说「再看看」', then: '隔天用名额紧张施压一次：「这个项目达人名额快满了，宝要是考虑好了尽快定，我帮宝留」' },
+          { if: '对方提到别家', then: '转「别家更高」应对：市场现状 + 综合收益' }
+        ];
+        c.tip = '本轮价格不变。用「稀缺性 + 长期合作」推动决策，不要催太紧。';
+        break;
+      case 'want_benefits':
+        c.surface = '要更多权益（授权/佣金/挂车/样品等）';
+        c.real = '价格之外想多要——说明合作意愿存在，只是想在权益上占优';
+        c.concern = '在意到手收益最大化，权益能直接折算成钱';
+        c.strategy = '权益置换组合：佣金统一5% + 授权 + 投流/赠品/分发 + 强种草成交分成，打包谈';
+        c.why = '权益是比价格更灵活的谈判空间：给权益不破坏价格底线，还能让对方觉得「赚到了」';
+        c.priceAction = 'hold';
+        c.priceNote = '价格保持不变，用权益置换满足对方';
+        c.script = buildScript('want_benefits', hl);
+        c.altScript = buildAltScript('want_benefits', hl);
+        c.branches = [
+          { if: '对方接受权益组合', then: '立刻确认成交，用确认模板收尾' },
+          { if: '对方还要更多（如更高佣金/授权）', then: '回应：佣金统一 5% 是公司政策没法调，但投流/授权/赠品权益可以再谈，强种草挂车是标配，价格是真没法再动' },
+          { if: '对方用「让权益换降价」', then: '权衡：可以降 ' + S.step + ' 元但收回部分权益（如减赠品/减分发），保持对等' }
+        ];
+        c.tip = '本轮价格不变，用权益置换满足对方，避免直接加价。';
+        break;
+      case 'raise_price':
+        c.surface = '想涨价或报价比星图还高';
+        c.real = '试探我方预算上限，或对当前报价不满想抬价';
+        c.concern = '在意「报价是否合理」+「是否还有上探空间」';
+        c.strategy = '星图对比锚定预算合理性 → 拖字诀（说要申请）→ 试单诱惑（先按现价试一期）';
+        c.why = '涨价诉求不能直接答应（会开坏头），用「比星图高」锚定合理性，用「试单后涨」给台阶';
+        c.priceAction = 'hold';
+        c.priceNote = '价格保持不变。涨价诉求先「拖 + 对比星图」，不直接答应';
+        c.script = buildScript('raise_price', hl);
+        c.altScript = buildAltScript('raise_price', hl);
+        c.branches = [
+          { if: '对方松口', then: '按原价推进，尽快锁定档期' },
+          { if: '对方坚持要涨', then: '说明涨幅超出预算，礼貌评估是否放弃该达人，不硬谈' },
+          { if: '对方说「星图就是这个价」', then: '核实星图报价，用实际数据回应，仍超预算则坚守底线' }
+        ];
+        c.tip = '本轮价格不变。涨价诉求一般先「拖 + 对比星图」，不直接答应。';
+        break;
+      case 'cut_our_price':
+        c.surface = '反过来砍我们的价（觉得我方报高了/要求更便宜）';
+        c.real = '想争取更低价格——此时我方报价在对方看来有水分，需要证明价值或让利';
+        c.concern = '在意性价比，需要「这个价凭什么」的答案';
+        c.strategy = '强种草挂车简单化（降低认知成本）→ 同类达人预算对比 → 让利但同步收权益';
+        c.why = '对方砍价时要证明「这个价不虚」：合作形式简单 + 同体量对比，再让利也要换回点什么';
+        c.priceAction = 'down';
+        c.priceNote = '本轮降 ' + S.step + ' 元到 ' + next + '，同步收权益（减赠品/减分发）保持对等';
+        c.script = buildScript('cut_our_price', hl);
+        c.altScript = buildAltScript('cut_our_price', hl);
+        c.branches = [
+          { if: '对方认可', then: '推进成交，确认模板收尾' },
+          { if: '对方仍砍价', then: '下一轮再降 ' + S.step + ' 元，但同步收回部分权益（赠品/分发），让对方知道让利有代价' },
+          { if: '对方质疑价格', then: '提供同体量达人合作价格截图作证据' }
+        ];
+        c.tip = '本轮已自动降 ' + S.step + ' 元。对方砍价时要同步「收权益」，保持谈判对等。';
+        break;
+      case 'reject':
+        c.surface = '明确拒绝合作';
+        c.real = '可能是真拒绝（对品牌/价格无感），也可能是最后的压价话术（用拒绝逼让步）';
+        c.concern = '在意合作值不值 + 印象分（为以后留路）';
+        c.strategy = '不纠缠 → 长期主义收尾 + 留口子 + 探底价（如果是压价话术会自己回来）';
+        c.why = '真拒绝时死缠烂打毁印象；压价式拒绝给足台阶，对方大概率会回来';
+        c.priceAction = 'hold';
+        c.priceNote = '价格不变。真拒绝不硬压，留好印象为后续合作铺路';
+        c.script = buildScript('reject', hl);
+        c.altScript = buildAltScript('reject', hl);
+        c.branches = [
+          { if: '对方只是压价（会回来）', then: '等 1-2 天，对方主动回来时按「嫌价格低」流程推进' },
+          { if: '对方真拒绝', then: '停止跟进，标记「流失」；隔月做一次轻触达（新品/新预算时）' },
+          { if: '对方给出可接受价', then: '记录对方底价，去内部争取；能批则按新价推进，不能批则礼貌婉拒' }
+        ];
+        c.tip = '本轮价格不变。真拒绝时不硬压，留好印象为后续合作铺路。';
+        break;
+      default:
+        c.surface = '暂未匹配到典型意图，消息内容较常规';
+        c.real = '可能是正常沟通/询问细节，按通用议价流程推进';
+        c.concern = '待观察——先出价 + 给合作亮点，看对方反应再定位意图';
+        c.strategy = '强种草挂车简单化 + 投流全包权益 + 长期合作';
+        c.why = '通用开场：报出诚意价 + 亮出权益牌，用对方反应校准下一步策略';
+        c.priceAction = 'down';
+        c.priceNote = '本轮降 ' + S.step + ' 元到 ' + next + '（通用默认）';
+        c.script = buildScript('general', hl);
+        c.altScript = buildAltScript('general', hl);
+        c.branches = [
+          { if: '对方回应积极', then: '顺势推进成交，确认模板收尾' },
+          { if: '对方嫌低/压价', then: '转「嫌价格低/砍我方价」应对流程' },
+          { if: '对方问细节', then: '提供完整合作方案，消除疑虑' }
+        ];
+        c.tip = '本轮已自动降 ' + S.step + ' 元（通用默认）。对方回复后再精准定位意图。';
+    }
+    return c;
+  }
+
+  /* ============ UI 渲染 ============ */
+  function firstScripts() {
+    return [
+      '宝你看，我们首次合作星图' + money(S.current) + '先合作一次可以吗，咱们是高投流，效果可以的话投流预算没有上限的～',
+      '我们公司这边手上还有 KONO、WIS 这些洗护的品可以长期合作滴～这个合作价格报上去比同类型的贵的话营销端又要打回来啦，后面效果好我努力申请增加预算，多多和你合作呀～'
+    ];
+  }
+  function scriptFor(state) {
+    if (state === 'first') return firstScripts()[0];
+    if (state === 'mid') return '宝，方案按 ' + money(S.current) + ' 前置来，投流全包、佣金5%都配齐。第一次合作先打开窗口，后面赫系产品和档期都优先想着宝～';
+    if (state === 'warn') return '宝，' + money(S.current) + ' 是按行情和账号价值评估的定价，投流全包 + 佣金5%配齐，投流预算上不封顶，综合算下来不低的～';
+    if (state === 'floor') return '宝，' + money(S.current) + ' 是这批预算的定价，我们很坦诚。但方案核心在投流：全包上不封顶，佣金5%照给，这单跑出成绩后续档期资源都优先给宝～';
+    return '';
+  }
+  function stateOf() {
+    if (S.current <= S.floor) return 'floor';
+    if (S.current <= S.floor + S.step * 2) return 'warn';
+    if (S.round === 1) return 'first';
+    return 'mid';
+  }
+
+  function updateProgress() {
+    var total = S.quote - S.floor;
+    var remain = S.current - S.floor;
+    var pct = total > 0 ? Math.max(0, Math.min(100, (remain / total) * 100)) : 0;
+    $('progressFill').style.width = pct + '%';
+    $('labQuote').textContent = money(S.quote);
+    $('labCurrent').textContent = money(S.current);
+    $('labFloor').textContent = money(S.floor);
+    var st = $('labState');
+    if (S.current <= S.floor) { st.textContent = '🔴 已触底，只谈权益'; st.className = 'progress-state floor'; }
+    else if (S.current <= S.floor + S.step * 2) { st.textContent = '⚠️ 接近底线（还剩 ' + (S.current - S.floor) + ' 元）'; st.className = 'progress-state warn'; }
+    else { st.textContent = '谈判中 · 已降 ' + (S.quote - S.current) + ' 元'; st.className = 'progress-state ok'; }
+    $('progressCard').style.display = 'block';
+  }
+
+  function addRound() {
+    var st = stateOf();
+    var tagText = '第 ' + S.round + ' 轮', tagCls = 'mid';
+    if (st === 'first') { tagText = '第 1 轮 · 首轮报价'; tagCls = 'first'; }
+    if (st === 'warn') { tagText = '⚠️ 接近底线'; tagCls = 'warn'; }
+    if (st === 'floor') { tagText = '🔴 已触底'; tagCls = 'floor'; }
+
+    var roundEl = document.createElement('div');
+    roundEl.className = 'round';
+    var scriptHtml = '';
+    if (st === 'first') {
+      var firsts = firstScripts();
+      scriptHtml = firsts.map(function (s, i) {
+        return '<div class="script-box" style="margin-bottom:6px;">' + esc(s) +
+          '<div class="btn-row" style="margin-top:6px;"><button class="btn btn-copy btn-mini" data-act="copy" data-idx="' + i + '">📋 复制话术' + (i === 0 ? '①' : '②') + '</button></div></div>';
+      }).join('');
+    } else {
+      scriptHtml = '<div class="script-box">' + esc(scriptFor(st)) + '</div>';
+    }
+    roundEl.innerHTML =
+      '<div class="round-head">' +
+        '<span class="round-tag ' + tagCls + '">' + tagText + '</span>' +
+        '<span class="round-price">' + money(S.current) + '<small>达人报 ' + money(S.quote) + ' / 底价 ' + money(S.floor) + '</small></span>' +
+      '</div>' +
+      '<div class="sec-label">我方话术</div>' +
+      scriptHtml +
+      '<div class="sec-label">达人回复（粘贴原话）</div>' +
+      '<div class="reply-wrap">' +
+        '<textarea placeholder="例：宝这个价我们真的给不了，我们给老客户都是1000这个价啦，我们洗护产品最近跑很好呢" data-role="replyInput"></textarea>' +
+        '<button class="btn-analyze" data-role="analyzeBtn">🎯 分析应答</button>' +
+      '</div>' +
+      '<div class="analysis" data-role="analysis"></div>' +
+      '<div class="result-box" data-role="result"></div>';
+
+    if (st === 'warn') roundEl.insertAdjacentHTML('beforeend', '<div style="font-size:12px;color:#c47d0a;background:#fdf0dc;border-radius:8px;padding:8px 12px;margin-top:10px;">⚠️ 已接近底价（还剩 ' + (S.current - S.floor) + ' 元空间）。建议此轮起把重心放到投流 + 成交分成上，不再在价格上拉扯。</div>');
+    else if (st === 'floor') roundEl.insertAdjacentHTML('beforeend', '<div style="font-size:12px;color:#d33;background:#fde8e8;border-radius:8px;padding:8px 12px;margin-top:10px;">🔴 已到营销底价，绝不再降。本轮起主推：投流拉满 + 佣金5% + 强种草成交分成 + 长期合作承诺。</div>');
+
+    timeline.appendChild(roundEl);
+    $('timelineWrap').style.display = 'block';
+
+    var copyBtns = roundEl.querySelectorAll('[data-act="copy"]');
+    for (var ci = 0; ci < copyBtns.length; ci++) {
+      (function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = btn.getAttribute('data-idx');
+          if (idx !== null) {
+            var firsts = firstScripts();
+            copyText(firsts[parseInt(idx, 10)] || firsts[0]);
+          } else {
+            copyText(roundEl.querySelector('.script-box').textContent);
+          }
+        });
+      })(copyBtns[ci]);
+    }
+
+    var input = roundEl.querySelector('[data-role="replyInput"]');
+    var btn = roundEl.querySelector('[data-role="analyzeBtn"]');
+    var analysisBox = roundEl.querySelector('[data-role="analysis"]');
+    var resultBox = roundEl.querySelector('[data-role="result"]');
+
+    btn.addEventListener('click', function () {
+      if (S.finished) { toast('谈判已结束'); return; }
+      var text = input.value.trim();
+      if (!text) { toast('⚠️ 请先粘贴达人的回复'); return; }
+      var intent = classify(text);
+      var res = respond(intent, text);
+      renderAnalysis(roundEl, analysisBox, resultBox, intent, res, text);
+    });
+
+    roundEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderAnalysis(roundEl, analysisBox, resultBox, intent, res, darenText) {
+    var branchHtml = res.branches.map(function (b) {
+      return '<div class="branch-item"><span class="if">若</span> ' + esc(b.if) + '<br><span class="then">→ 我们</span> ' + esc(b.then) + '</div>';
+    }).join('');
+    var evidenceHtml = '';
+    if (intent.matched && intent.matched.length) {
+      evidenceHtml = '<div class="kv"><b>识别依据：</b>' + intent.matched.map(function (k) { return '「' + esc(k) + '」'; }).join('、') + '</div>';
+    }
+
+    var html =
+      '<div class="intent-line">🎯 对方意图：' + esc(intent.name) + '　·　' + esc(res.surface) + '</div>' +
+      '<div class="reply-block"><span class="tag main">💬 最优回复</span><div class="txt">' + esc(res.script) + '</div>' +
+        '<div class="btn-row"><button class="btn btn-copy btn-mini" data-role="copyBest">📋 复制</button></div></div>' +
+      '<div class="reply-block"><span class="tag alt">💬 备选回复</span><div class="txt">' + esc(res.altScript) + '</div>' +
+        '<div class="btn-row"><button class="btn btn-copy btn-mini" data-role="copyAlt">📋 复制</button></div></div>' +
+      '<details><summary>📋 意图详情 · 策略 · 下一步预判</summary><div class="detail-body">' +
+        '<span class="kv"><b>真实意图：</b>' + esc(res.real) + '</span>' +
+        '<span class="kv"><b>对方在意：</b>' + esc(res.concern) + '</span>' +
+        '<span class="kv"><b>策略：</b>' + esc(res.strategy) + '</span>' +
+        '<span class="kv"><b>为什么：</b>' + esc(res.why) + '</span>' +
+        evidenceHtml +
+        '<span class="kv"><b>议价建议：</b>' + esc(res.priceNote) + '</span>' +
+        '<div style="margin-top:4px;"><b style="color:#4a3f8f;">🔮 下一步预判：</b>' + branchHtml + '</div>' +
+      '</div></details>' +
+      (res.tip ? '<div style="font-size:12px;color:#8a6a10;background:#fffbea;border-radius:8px;padding:8px 12px;margin-top:8px;">⚠️ ' + esc(res.tip) + '</div>' : '') +
+      '<div class="btn-row">' +
+        '<button class="btn btn-accept" data-role="acceptBtn">🤝 达成合作</button>' +
+        '<button class="btn btn-reject" data-role="rejectBtn">🕊 终止谈判</button>' +
+      '</div>';
+
+    analysisBox.innerHTML = html;
+    analysisBox.style.display = 'block';
+
+    analysisBox.querySelector('[data-role="copyBest"]').addEventListener('click', function () { copyText(res.script); });
+    analysisBox.querySelector('[data-role="copyAlt"]').addEventListener('click', function () { copyText(res.altScript); });
+    analysisBox.querySelector('[data-role="acceptBtn"]').addEventListener('click', function () { handleAccept(roundEl, resultBox); });
+    analysisBox.querySelector('[data-role="rejectBtn"]').addEventListener('click', function () { handleReject(roundEl, resultBox); });
+
+    if (res.priceAction === 'down') {
+      setTimeout(function () {
+        S.current = Math.max(S.floor, S.current - S.step);
+        S.round++;
+        updateProgress();
+        addRound();
+        toast('➖ 已自动降 ' + S.step + ' 元，进入第 ' + S.round + ' 轮');
+      }, 700);
+    }
+  }
+
+  function acceptTemplate() {
+    return '好的宝！太开心啦～\n【合作达人】' + S.type + '\n【合作价格】' + money(S.current) + '\n【合作形式】强种草挂车带货，视频真实使用+口播安利+挂车直达\n【信息流授权时长】6个月，需全平台授权\n【收片】发布版、发布版去BGM、发布版去字幕、发布版去字幕去BGM\n【挂车及佣金】视频挂车带货，佣金统一5%\n【档期情况】到货后出\n【竞品排他】前七后七\n【是否可热推】需要授权全域投流\n宝确认下信息～确认无误我这边提报～';
+  }
+  function rejectTemplate() {
+    return '理解的宝～那宝这边有没有一个可以接受的最低价格呀？我尽量帮宝去跟上面争取下上调～（抽离再谈，不硬压）';
+  }
+  function handleAccept(roundEl, resultBox) {
+    if (S.finished) return;
+    S.finished = true;
+    roundEl.classList.add('done');
+    resultBox.className = 'result-box';
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '<div style="font-weight:800;margin-bottom:6px;">🎉 成交确认模板（复制发送）</div>' + esc(acceptTemplate()) +
+      '<div class="btn-row"><button class="btn btn-copy" data-role="copyAccept">📋 复制确认模板</button></div>';
+    resultBox.querySelector('[data-role="copyAccept"]').addEventListener('click', function () { copyText(acceptTemplate()); });
+    disableInputs();
+    toast('🎉 成交！');
+  }
+  function handleReject(roundEl, resultBox) {
+    if (S.finished) return;
+    S.finished = true;
+    resultBox.className = 'result-box reject';
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '<div style="font-weight:800;margin-bottom:6px;">🕊 抽离再谈（复制发送）</div>' + esc(rejectTemplate()) +
+      '<div class="btn-row"><button class="btn btn-copy" data-role="copyReject">📋 复制话术</button></div>';
+    resultBox.querySelector('[data-role="copyReject"]').addEventListener('click', function () { copyText(rejectTemplate()); });
+    disableInputs();
+    toast('已切换抽离再谈模式');
+  }
+  function disableInputs() {
+    document.querySelectorAll('.btn-analyze, .reply-input-wrap textarea').forEach(function (el) { el.disabled = true; });
+  }
+
+  $('btnStart').addEventListener('click', function () {
+    var q = parseInt($('inQuote').value, 10);
+    var f = parseInt($('inFloor').value, 10);
+    var st = parseInt($('inStep').value, 10) || 100;
+    if (!q || !f || q <= 0 || f <= 0) { toast('⚠️ 请填写达人报价和营销底价'); return; }
+    if (f >= q) { toast('⚠️ 营销底价必须低于达人报价'); return; }
+
+    S.quote = q; S.floor = f; S.step = st;
+    S.type = $('inType').value; S.product = $('inProduct').value;
+    S.round = 1; S.finished = false; S.running = true;
+
+    var mid = Math.round((q + f) / 2 / 100) * 100;
+    S.current = Math.max(mid, f + st * 3);
+    if (S.current > q) S.current = q;
+
+    timeline.innerHTML = '';
+    $('progressCard').style.display = 'block';
+    $('inputCard').style.display = 'none';
+
+    updateProgress();
+    addRound();
+  });
+
+  document.querySelector('h1').addEventListener('dblclick', function () {
+    if (confirm('重置全部谈判记录？')) { location.reload(); }
+  });
+})();
+</script>
+</body>
+</html>
